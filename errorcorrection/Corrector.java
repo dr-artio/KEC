@@ -1,4 +1,4 @@
-package ErrorCorrection;
+package errorcorrection;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -6,9 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -245,9 +243,15 @@ public class Corrector {
 		}
 		else
 		{
+//                        String refr = "GCATGGGATATGATGATGAACTGGAGTCCAACGACCACCTTACTCCTCGCCCAGGTTATGAGGATCCCAGGTACTCTGGTAGATTTACTCGCTGGAGGCCACTGGGGTGTCCTCGTGGGAGTGGCCTATTTCAGTATGCAAGCCAACTGGGCCAAAGTCATCTTGGTCCTATTCCTTTTTGCAGGGGTTGACGCCAAGACCACCACAACTGGGTCTGCGGCGGCCAGGGGAGTCAGCCGCGTCACTGGGTTCTTTGCCCCCGGGCCTAGCCAAAACTTGCAGCTCATTAACACCAACGGGAGCTGGCA";
+//                        int d = findClosest(refr,15,6.6);
+//                        System.out.println();
+                        
 			for (int j = 0; j < nIter; j++)
 			{
-				i = ds.k;
+                            
+                                
+                                i = ds.k;
 				while (i >= kmin)
 				{
 					correctErrors(i);
@@ -256,7 +260,8 @@ public class Corrector {
 				int ncut = cutTails();
 				delLargeErrors();
 				ds = new DataSet(ds);
-                                int aaa = ds.getNreads();
+//                                d = findClosest(refr,15,6.6);
+//                                int ncut = 0;
                                 System.gc();
 				calculations();
 				nErrors.add(ds.getNerrors());
@@ -384,6 +389,11 @@ public class Corrector {
                 if ((toRemoveAllUncorrect)&&(ds.getNreads() > minNReads))
                     deleteWholeUncorrectible();
 
+                ds = new DataSet(ds);
+                
+//                String refr = "GCATGGGATATGATGATGAACTGGAGTCCAACGACCACCTTACTCCTCGCCCAGGTTATGAGGATCCCAGGTACTCTGGTAGATTTACTCGCTGGAGGCCACTGGGGTGTCCTCGTGGGAGTGGCCTATTTCAGTATGCAAGCCAACTGGGCCAAAGTCATCTTGGTCCTATTCCTTTTTGCAGGGGTTGACGCCAAGACCACCACAACTGGGTCTGCGGCGGCCAGGGGAGTCAGCCGCGTCACTGGGTTCTTTGCCCCCGGGCCTAGCCAAAACTTGCAGCTCATTAACACCAACGGGAGCTGGCA";
+//                int d = findClosest(refr,15,6.6);
+                
                 System.gc();
 		calculations();
 		nErrors.add(ds.getNerrors());
@@ -417,6 +427,8 @@ public class Corrector {
 		if (toFindHapl)
 			ds.findHaplotypes();
 		System.out.println("Haplotypes: " + ds.haplotypes.size());
+                
+ //               d = findClosestHapl(refr,15,6.6);
 
                 FileWriter fw = new FileWriter(ds.file_name + "_log.txt");
                 fw.write("Thresholds: " + thresholds + "\n");
@@ -445,10 +457,6 @@ public class Corrector {
 		for (Read r : ds.badReads)
                 {
                         count++;
-                        if ((count == 770)&&(length == 1)){}
-                            //System.out.println();
-                        DynamicOut.printStep("Correcting:"
-                                + " read " + count + "/" + ds.badReads.size() + "/" + length);
 			for (ErrorRegion er : r.errorRegions)
 				if (er.length == length)
 				{
@@ -699,6 +707,8 @@ public class Corrector {
                 count = 0;
 		for (Read r : ds.badReads)
 		{
+//                    if (r.name.equalsIgnoreCase("read385"))
+//                        System.out.println();
 			double l = 0;
 			int lr = r.getLength();
 			for (ErrorRegion er : r.errorRegions)
@@ -718,7 +728,7 @@ public class Corrector {
 		ds.calculateKMersAndKCounts();
 
                 if (ds.freqThr == -1)
-               {
+                {
                     if (ds.finderrorsseglen == 0)
                         ds.findFreqThresholdPoisson();
                     else
@@ -1745,12 +1755,12 @@ public class Corrector {
                     String s;
                     while ((s = stdInput.readLine()) != null)
                     {
-                        System.out.println(s);
+//                        System.out.println(s);
                     }
                     try {
                         p.waitFor();
                     } catch (InterruptedException ex) {
-                         Logger.getLogger(Corrector.class.getName()).log(Level.SEVERE, null, ex);
+                         //Logger.getLogger(Corrector.class.getName()).log(Level.SEVERE, null, ex);
                     }
                     if (p.exitValue()!= 0)
                     {
@@ -1854,15 +1864,14 @@ public class Corrector {
                     p = run.exec(param);
                     BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
                     String s;
-                    
                     while ((s = stdInput.readLine()) != null)
                     {
-                        System.out.println(s);
+//                        System.out.println(s);
                     }
             try {
                 p.waitFor();
             } catch (InterruptedException ex) {
-                Logger.getLogger(Corrector.class.getName()).log(Level.SEVERE, null, ex);
+               // Logger.getLogger(Corrector.class.getName()).log(Level.SEVERE, null, ex);
             }
                     if (p.exitValue()!= 0)
                     {
@@ -2095,4 +2104,136 @@ public class Corrector {
                 br.close();
                 fr.close();
                 fw.close();
+        }
+       int findClosest(String refer, double gapop, double gapext) throws IOException
+       {
+           int min = 100000;
+           String minName = "";
+           int count = 0;
+           for (Read r : ds.reads)
+           {
+                    count++;
+                    System.out.println("Aligning " + count + "\\" + ds.reads.size());
+                    if (r.getLength() < 200)
+                        continue;
+                    Runtime run=Runtime.getRuntime();
+                    Process p=null;
+                    FileWriter fw_alin = new FileWriter("allign_input.fas");
+                    fw_alin.write(">" + "reference" + "\n" + refer + "\n");
+                    fw_alin.write(">" + r.name + "\n" + r.nucl + "\n");
+                    fw_alin.close();
+                    String param = "ClustalW2//clustalw2 -INFILE=" +"allign_input.fas" + " -OUTFILE=" + "allign_output.fas";
+                    param+= " -OUTPUT=FASTA -DNAMATRIX=IUB -GAPOPEN=" + gapop +" -GAPEXT=" + gapext + " -TYPE=DNA -PWDNAMATRIX=IUB -PWGAPOPEN=" + gapop+ " -PWGAPEXT=" + gapext;
+                    p = run.exec(param);
+                    BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
+                    String s;
+                    while ((s = stdInput.readLine()) != null)
+                    {
+//                        System.out.println(s);
+                    }
+                    if (p.exitValue()!= 0)
+                    {
+                        System.out.println("Error in allgnment program");
+                    }
+                    DataSet alignment = new DataSet("allign_output.fas",'c');
+                    File f = new File("allign_input.fas");
+                    f.delete();
+                    f = new File("allign_output.fas");
+                    f.delete();
+                    f = new File("allign_input.dnd");
+                    f.delete();
+                    String ref_align = "";
+                    String read_align = "";
+                    for (Read r1: alignment.reads)
+                    {
+                        if (r1.name.equalsIgnoreCase("reference"))
+                            ref_align = r1.nucl;
+                        if (r1.name.equalsIgnoreCase(r.name))
+                            read_align = r1.nucl;
+                    }
+                    int start = 0;
+                    int end = ref_align.length() - 1;
+                    while ((ref_align.charAt(start)=='-') || (read_align.charAt(start))=='-')
+                        start++;
+                    while ((ref_align.charAt(end)=='-') || (read_align.charAt(end))=='-')
+                        end--;
+                    int dist = 0;
+                    for (int i = start; i <= end; i++)
+                        if (ref_align.charAt(i) != read_align.charAt(i))
+                            dist++;
+                    if (dist < min)
+                    {
+                        min = dist;
+                        minName = r.name;
+                    }
+           }
+           System.out.println(min);
+           System.out.println(minName);
+           return min;
+       }
+        int findClosestHapl(String refer, double gapop, double gapext) throws IOException
+                // <editor-fold defaultstate="collapsed" desc=" DESCRIPTION ">
+       {
+           int min = 100000;
+           String minName = "";
+           int count = 0;
+           for (Haplotype r : ds.haplotypes)
+           {
+                    count++;
+                    System.out.println("Aligning " + count + "\\" + ds.haplotypes.size());
+                    Runtime run=Runtime.getRuntime();
+                    Process p=null;
+                    FileWriter fw_alin = new FileWriter("allign_input.fas");
+                    fw_alin.write(">" + "reference" + "\n" + refer + "\n");
+                    fw_alin.write(">" + r.name + "\n" + r.nucl + "\n");
+                    fw_alin.close();
+                    String param = "ClustalW2//clustalw2 -INFILE=" +"allign_input.fas" + " -OUTFILE=" + "allign_output.fas";
+                    param+= " -OUTPUT=FASTA -DNAMATRIX=IUB -GAPOPEN=" + gapop +" -GAPEXT=" + gapext + " -TYPE=DNA -PWDNAMATRIX=IUB -PWGAPOPEN=" + gapop+ " -PWGAPEXT=" + gapext;
+                    p = run.exec(param);
+                    BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
+                    String s;
+                    while ((s = stdInput.readLine()) != null)
+                    {
+//                        System.out.println(s);
+                    }
+                    if (p.exitValue()!= 0)
+                    {
+                        System.out.println("Error in allgnment program");
+                    }
+                    DataSet alignment = new DataSet("allign_output.fas",'c');
+                    File f = new File("allign_input.fas");
+                    f.delete();
+                    f = new File("allign_output.fas");
+                    f.delete();
+                    f = new File("allign_input.dnd");
+                    f.delete();
+                    String ref_align = "";
+                    String read_align = "";
+                    for (Read r1: alignment.reads)
+                    {
+                        if (r1.name.equalsIgnoreCase("reference"))
+                            ref_align = r1.nucl;
+                        if (r1.name.equalsIgnoreCase(r.name))
+                            read_align = r1.nucl;
+                    }
+                    int start = 0;
+                    int end = ref_align.length() - 1;
+                    while ((ref_align.charAt(start)=='-') || (read_align.charAt(start))=='-')
+                        start++;
+                    while ((ref_align.charAt(end)=='-') || (read_align.charAt(end))=='-')
+                        end--;
+                    int dist = 0;
+                    for (int i = start; i <= end; i++)
+                        if (ref_align.charAt(i) != read_align.charAt(i))
+                            dist++;
+                    if (dist < min)
+                    {
+                        min = dist;
+                        minName = r.name;
+                    }
+           }
+           System.out.println(min);
+           return min;
+       }
+               // </editor-fold>
 }
