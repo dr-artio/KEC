@@ -3,9 +3,9 @@
  * and open the template in the editor.
  */
 
-package ErrorCorrection;
+package errorcorrection;
 
-import ErrorCorrection.DataSet;
+import errorcorrection.DataSet;
 import java.io.IOException;
 
 /**

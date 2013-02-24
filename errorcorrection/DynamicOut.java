@@ -1,7 +1,7 @@
 /*
  * Copyrights
  */
-package ErrorCorrection;
+package errorcorrection;
 
 /**
  * This class is for making dynamic outpus

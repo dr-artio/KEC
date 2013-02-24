@@ -1,5 +1,6 @@
 
-package ErrorCorrection;
+package errorcorrection;
+
 import java.util.*;
 
 public class Read extends Sequence {

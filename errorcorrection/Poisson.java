@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package ErrorCorrection;
+package errorcorrection;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -87,7 +87,7 @@ public class Poisson {
     }
     
     /**
-     * Set _lambsa value.
+     * Set _lambda value.
      * @param stvar
      *      ordered array (index as a value of X)
      * @param start
@@ -104,7 +104,7 @@ public class Poisson {
      }
      
      /**
-     * Set _lambsa value.
+     * Set _lambda value.
      * @param stvar
      *      ordered array (index as a value of X)
      * @param start

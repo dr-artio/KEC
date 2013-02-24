@@ -1,4 +1,4 @@
-package ErrorCorrection;
+package errorcorrection;
 
 
 public class Calculator {

@@ -1,10 +1,10 @@
-package ErrorCorrection;
+package errorcorrection;
 import java.util.*;
 import java.io.*;
 import java.math.BigDecimal;
 
-import static ErrorCorrection.Poisson.*;
-import static ErrorCorrection.Exponent.*;
+import static errorcorrection.Poisson.*;
+import static errorcorrection.Exponent.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -590,7 +590,7 @@ public class DataSet {
 		 {
 			 count++;
                          count1++;
-                         System.out.println("Clustering: read " + count + "/" + reads.size());
+                         DynamicOut.printStep("Clustering: read " + count + "/" + reads.size());
 			 File f = new File("kmer" + count + "data.txt");
 			 FileWriter fw = new FileWriter(f);
 //			 fw.write(r.kmers.size() + " " + 2 + "\n");
@@ -751,7 +751,7 @@ public class DataSet {
                         System.exit(1);
                     }
                 freqThr = i+varseglen-1;
-                System.out.println();
+                //System.out.println();
         }
 
 	public void PrintReadsStat(String dir) throws IOException
