@@ -3,6 +3,7 @@ package errorcorrection;
 import java.io.File;
 import java.io.IOException;
 import net.sourceforge.argparse4j.*;
+import net.sourceforge.argparse4j.impl.Arguments;
 import net.sourceforge.argparse4j.inf.*;
 
 public class ErrorCorrection {
@@ -55,13 +56,14 @@ public class ErrorCorrection {
                 + "greater than 3 than influence is not significant "
                 + "(Default: " + nIter + ")");
 
-        parser.addArgument("-a").dest(ALIGN_PARAMETER)
-                .metavar("ClustalW")
+        parser.addArgument(new String[]{"-a","--align"}).dest(ALIGN_PARAMETER)
+                .action(Arguments.storeConst())
+                .setConst(1)
                 .setDefault(toFindHapl)
                 .type(Integer.class)
                 .help("Enable using of CLustalW for multiple sequence "
                 + "alignment for additional correction procedure (Default: "
-                + toFindHapl + ")");
+                + "do not align)");
 
         parser.addArgument("-l").dest(L_PARAMETER)
                 .metavar("Num of zeros")
