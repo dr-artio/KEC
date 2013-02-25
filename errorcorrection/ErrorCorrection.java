@@ -2,6 +2,9 @@ package errorcorrection;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import net.sourceforge.argparse4j.*;
 import net.sourceforge.argparse4j.impl.Arguments;
 import net.sourceforge.argparse4j.inf.*;
@@ -15,7 +18,16 @@ public class ErrorCorrection {
     private static final String READS_PARAMETER = "reads";
     private static final String DOMINGEN_PARAMETER = "domgen";
     private static final String DOMINPOSTPROC_PARAMETER = "dompostproc";
-
+    static String env_path;
+    static {
+        try {
+            env_path = new File(ErrorCorrection.class
+                    .getProtectionDomain().getCodeSource()
+                    .getLocation().toURI()).getParent() + File.separator;
+        } catch (URISyntaxException ex) {
+            Logger.getLogger(Corrector.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
     /**
      * @param args
      * @throws IOException
