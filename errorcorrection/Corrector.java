@@ -6,9 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -32,6 +30,7 @@ public class Corrector {
     boolean toRemoveAllUncorrect;
     boolean toPrintStat;
     boolean toPostprocessHeur;
+    File fl;
 
     Corrector(DataSet d) {
         ds = d;
@@ -107,7 +106,8 @@ public class Corrector {
         ds.deleteStrangeNucl();
         calculations();
         if (toPrintStat) {
-            ds.PrintReadsStat("Statistics_" + ds.file_name);
+            File f = new File(ds.file_name);
+            ds.PrintReadsStat("Statistics_" + f.getName());
 //                    ds.printErrorsStat("Statistics_" + ds.file_name);
         }
         nErrors.add(ds.getNerrors());
@@ -822,9 +822,9 @@ public class Corrector {
     }
 
     void postprocessHaplotypes(String addr, double gapop, double gapext, int dominparampostpr) throws IOException, InterruptedException {
-        File fl = new File(addr);
+        fl = new File(addr);
         if (!fl.exists()) {
-            System.out.println("No such file!");
+            System.err.println("No such file!");
             return;
         }
         if ((ds != null) && (ds.haplotypes.size() == 1)) {
@@ -843,20 +843,24 @@ public class Corrector {
         System.out.println("Postprocessing haplotypes \n");
         Runtime run = Runtime.getRuntime();
         Process p = null;
-        String s = "ClustalW2//clustalw2 -INFILE=" + addr + " -OUTFILE=" + addr + "_allign.fas";
-        s += " -OUTPUT=FASTA -DNAMATRIX=IUB -GAPOPEN=" + gapop + " -GAPEXT=" + gapext + " -TYPE=DNA -PWDNAMATRIX=IUB -PWGAPOPEN=" + gapop + " -PWGAPEXT=" + gapext;
+        String s = "ClustalW2" + File.separator +"clustalw2 -INFILE=" + addr + 
+                " -OUTFILE=" + addr + "_allign.fas";
+        s += " -OUTPUT=FASTA -DNAMATRIX=IUB -GAPOPEN=" + gapop + 
+                " -GAPEXT=" + gapext + " -TYPE=DNA -PWDNAMATRIX=IUB -PWGAPOPEN=" + 
+                gapop + " -PWGAPEXT=" + gapext;
 
         p = run.exec(s);
         BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
 
         System.out.println("Here is the standard output of the command:\n");
         while ((s = stdInput.readLine()) != null) {
-            System.out.println(s);
+            DynamicOut.printStep(s);
         }
         p.waitFor();
         if (p.exitValue() != 0) {
-            System.out.println("Error in allgnment program");
+            System.err.println("Error in allgnment program");
         }
+        DynamicOut.finishSteps();
         stdInput.close();
 
         DataSet hap = new DataSet(addr + "_allign.fas", 'c');
@@ -956,7 +960,7 @@ public class Corrector {
         }
         DataSet corhap = new DataSet(hap);
         corhap.findHaplotypes();
-        StringTokenizer st1 = new StringTokenizer(addr, "_");
+        StringTokenizer st1 = new StringTokenizer(fl.getName(), "_");
         String tag = st1.nextToken();
         corhap.PrintHaplotypesWithNameTag(addr + "_postprocessed.fas", tag);
 //              corhap.PrintHaplotypes(addr+"_postprocessed.fas");
@@ -1094,7 +1098,7 @@ public class Corrector {
     void printRevComp(String addr) throws IOException {
         File f = new File(addr);
         if (!f.exists()) {
-            System.out.println("No file to reverse");
+            System.err.println("No file to reverse");
             return;
         }
         FileReader fr = new FileReader(addr);
@@ -1157,9 +1161,10 @@ public class Corrector {
 
     public void postprocessHaplotypesPairwise(String addr, double gapop, double gapext, int dominparamonenucl, int dominparamgen, int nucldiffparam) throws IOException, InterruptedException {
         int dominparamgenins = 100;
-        File fl = new File(addr);
+        fl = new File(addr);
+        String pref = fl.getParent() + File.separator;
         if (!fl.exists()) {
-            System.out.println("No such file!");
+            System.err.println("No such file!");
             return;
         }
         DataSet hap = new DataSet(addr, 'c');
@@ -1175,7 +1180,7 @@ public class Corrector {
             System.out.println("Postprocessing haplotypes pairwise \n");
             Runtime run = Runtime.getRuntime();
             Process p = null;
-            String s = "ClustalW2//clustalw2 -INFILE=" + addr + " -OUTFILE=" + addr + "_allign.fas";
+            String s = "ClustalW2" + File.separator +"clustalw2 -INFILE=" + addr + " -OUTFILE=" + addr + "_allign.fas";
             s += " -OUTPUT=FASTA -DNAMATRIX=IUB -GAPOPEN=" + gapop + " -GAPEXT=" + gapext + " -TYPE=DNA -PWDNAMATRIX=IUB -PWGAPOPEN=" + gapop + " -PWGAPEXT=" + gapext;
 
             p = run.exec(s);
@@ -1183,12 +1188,13 @@ public class Corrector {
 
             System.out.println("Here is the standard output of the command:\n");
             while ((s = stdInput.readLine()) != null) {
-                System.out.println(s);
+                DynamicOut.printStep(s);
             }
             p.waitFor();
             if (p.exitValue() != 0) {
-                System.out.println("Error in allgnment program");
+                System.err.println("Error in allgnment program");
             }
+            DynamicOut.finishSteps();
             stdInput.close();
             int i = addr.length() - 1;
             while (addr.charAt(i) != '.') {
@@ -1277,28 +1283,32 @@ public class Corrector {
                         int opthomopdiff = Integer.MAX_VALUE;
                         double optdominparam = Double.MAX_VALUE;
                         for (ArrayList<Read> ar : possibpairs) {
-                            FileWriter fw_alin = new FileWriter("allign_input.fas");
+                            FileWriter fw_alin = new FileWriter(pref + "allign_input.fas");
                             fw_alin.write(">" + ar.get(0).name + "\n" + ar.get(0).nucl + "\n");
                             fw_alin.write(">" + ar.get(1).name + "\n" + ar.get(1).nucl + "\n");
                             fw_alin.close();
-                            String param = "ClustalW2//clustalw2 -INFILE=" + "allign_input.fas" + " -OUTFILE=" + "allign_output.fas";
-                            param += " -OUTPUT=FASTA -DNAMATRIX=IUB -GAPOPEN=" + gapop + " -GAPEXT=" + gapext + " -TYPE=DNA -PWDNAMATRIX=IUB -PWGAPOPEN=" + gapop + " -PWGAPEXT=" + gapext;
+                            String param = "ClustalW2" + File.separator +"clustalw2 -INFILE=" + pref + "allign_input.fas" + 
+                                    " -OUTFILE=" + pref + "allign_output.fas";
+                            param += " -OUTPUT=FASTA -DNAMATRIX=IUB -GAPOPEN=" + gapop + 
+                                    " -GAPEXT=" + gapext + " -TYPE=DNA -PWDNAMATRIX=IUB -PWGAPOPEN=" + 
+                                    gapop + " -PWGAPEXT=" + gapext;
                             p = run.exec(param);
                             stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
                             while ((s = stdInput.readLine()) != null) {
-                                System.out.println(s);
+                                DynamicOut.printStep(s);
                             }
                             p.waitFor();
                             if (p.exitValue() != 0) {
-                                System.out.println("Error in allgnment program");
+                                System.err.println("Error in allgnment program");
                             }
+                            DynamicOut.finishSteps();
                             stdInput.close();
-                            DataSet alignment = new DataSet("allign_output.fas", 'c');
-                            File f = new File("allign_input.fas");
+                            DataSet alignment = new DataSet(pref + "allign_output.fas", 'c');
+                            File f = new File(pref + "allign_input.fas");
                             f.delete();
-                            f = new File("allign_output.fas");
+                            f = new File(pref + "allign_output.fas");
                             f.delete();
-                            f = new File("allign_input.dnd");
+                            f = new File(pref + "allign_input.dnd");
                             f.delete();
                             String fir = alignment.reads.get(0).getNucl();
                             String sec = alignment.reads.get(1).getNucl();
@@ -1340,7 +1350,6 @@ public class Corrector {
             for (ArrayList<Read> ar : closepairs) {
                 System.out.println(ar.get(0).name);
                 System.out.println(ar.get(1).name);
-                System.out.println();
             }
             boolean correction = false;
             for (ArrayList<Read> ar : closepairs) {
@@ -1358,36 +1367,41 @@ public class Corrector {
 
                 run = Runtime.getRuntime();
                 p = null;
-                FileWriter fw_alin = new FileWriter("allign_input.fas");
+                FileWriter fw_alin = new FileWriter(pref + "allign_input.fas");
                 fw_alin.write(">" + large.name + "\n" + large.nucl + "\n");
                 fw_alin.write(">" + small.name + "\n" + small.nucl + "\n");
                 fw_alin.close();
-                String param = "ClustalW2//clustalw2 -INFILE=" + "allign_input.fas" + " -OUTFILE=" + "allign_output.fas";
+                String param = "ClustalW2" + File.separator +"clustalw2 -INFILE=" + 
+                        pref + "allign_input.fas" + " -OUTFILE=" +
+                        pref + "allign_output.fas";
                 param += " -OUTPUT=FASTA -DNAMATRIX=IUB -GAPOPEN=" + gapop + " -GAPEXT=" + gapext + " -TYPE=DNA -PWDNAMATRIX=IUB -PWGAPOPEN=" + gapop + " -PWGAPEXT=" + gapext;
                 p = run.exec(param);
                 stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
                 while ((s = stdInput.readLine()) != null) {
-                    System.out.println(s);
+                    DynamicOut.printStep(s);
                 }
                 p.waitFor();
                 if (p.exitValue() != 0) {
-                    System.out.println("Error in allgnment program");
+                    System.err.println("Error in allgnment program");
                 }
+                DynamicOut.finishSteps();
                 stdInput.close();
-                DataSet alignment = new DataSet("allign_output.fas", 'c');
-                File f = new File("allign_input.fas");
+                DataSet alignment = new DataSet(pref + "allign_output.fas", 'c');
+                File f = new File(pref + "allign_input.fas");
                 f.delete();
-                f = new File("allign_output.fas");
+                f = new File(pref + "allign_output.fas");
                 f.delete();
-                f = new File("allign_input.dnd");
+                f = new File(pref + "allign_input.dnd");
                 f.delete();
                 String large_align = "";
                 String small_align = "";
+                    
                 for (Read r : alignment.reads) {
-                    if (r.name.equalsIgnoreCase(large.name)) {
+                      
+                    if (large.name.toLowerCase().contains(r.name.toLowerCase())) {
                         large_align = r.nucl;
                     }
-                    if (r.name.equalsIgnoreCase(small.name)) {
+                    if (small.name.toLowerCase().contains(r.name.toLowerCase())) {
                         small_align = r.nucl;
                     }
                 }
@@ -1397,12 +1411,13 @@ public class Corrector {
 
                 int startcompdiff = 0;
                 int endcompdiff = l - 1;
-                String sz = "";
+                String sz;
                 if (large_align.length() > 0 && large_align.charAt(0) == '-') {
                     sz = large_align;
                 } else {
                     sz = small_align;
                 }
+                //System.out.println("sz=" + sz);
                 while (sz.charAt(startcompdiff) == '-') {
                     startcompdiff++;
                 }
@@ -1583,11 +1598,12 @@ public class Corrector {
             if (iter == niterpostp - 1) {
                 addr = addr + "_PostprocPair.fas";
             }
-            StringTokenizer st1 = new StringTokenizer(addr, "_");
+            
+            StringTokenizer st1 = new StringTokenizer(fl.getName(), "_");
             String tag = st1.nextToken();
             corhap.PrintHaplotypesWithNameTag(addr, tag);
 //                corhap.PrintHaplotypes(addr);
-            System.out.println("");
+           // System.out.println("");
             hap = new DataSet(addr, 'c');
             //// ???????????????????????
             if (((hap.reads.size() == 1) && (iter != niterpostp - 1)) || (!correction)) {
@@ -1606,7 +1622,7 @@ public class Corrector {
     void postprocessFinal(String addr) throws IOException {
         File fl = new File(addr);
         if (!fl.exists()) {
-            System.out.println("No such file!");
+            System.err.println("No such file!");
             return;
         }
         if (ds.haplotypes.size() == 1) {
@@ -1625,13 +1641,10 @@ public class Corrector {
         Collections.sort(dats.reads, sc);
         int m = dats.reads.size() / 2;
         int median = dats.reads.get(m).getLength();
-        System.out.println((double) dats.reads.get(dats.reads.size() - 1).getLength() / median);
+        DynamicOut.printStep("" + (double) dats.reads.get(dats.reads.size() - 1).getLength() / median);
         for (Read r : dats.reads) {
-            System.out.println(r.getLength());
+            DynamicOut.printStep("" + r.getLength());
         }
-        System.out.println();
-
-
     }
 
     void calcStatHomop(String addr) throws IOException {
@@ -1705,7 +1718,7 @@ public class Corrector {
 
         DataSet corhap = new DataSet(hap);
         corhap.findHaplotypes();
-        StringTokenizer st1 = new StringTokenizer(addr, "_");
+        StringTokenizer st1 = new StringTokenizer(fl.getName(), "_");
         String tag = st1.nextToken();
         corhap.PrintHaplotypesWithNameTag(addr + "_postprocessed.fas", tag);
     }
@@ -1713,18 +1726,19 @@ public class Corrector {
     void postprocessHaplotypesNuclSwitch(String addr, String ref_addr, String idmethod, double gapop, double gapext) throws FileNotFoundException, IOException // <editor-fold defaultstate="collapsed" desc=" DESCRIPTION ">
     {
         DataSet hapl = new DataSet(addr, "ET");
+        String pref = fl.getParent() + File.separator;
         Read ref = (new DataSet(ref_addr)).reads.get(0);
         int count = 0;
         for (Read h : hapl.reads) {
             count++;
-            System.out.println("Aligning " + count + File.separator + hapl.reads.size());
+            DynamicOut.printStep("Aligning " + count + File.separator + hapl.reads.size());
             Runtime run = Runtime.getRuntime();
             Process p = null;
-            FileWriter fw_alin = new FileWriter("allign_input.fas");
+            FileWriter fw_alin = new FileWriter(pref + "allign_input.fas");
             fw_alin.write(">" + "reference" + "\n" + ref.nucl + "\n");
             fw_alin.write(">" + h.name + "\n" + h.nucl + "\n");
             fw_alin.close();
-            String param = "ClustalW2//clustalw2 -INFILE=" + "allign_input.fas" + " -OUTFILE=" + "allign_output.fas";
+            String param = "ClustalW2" + File.separator +"clustalw2 -INFILE=" + pref + "allign_input.fas" + " -OUTFILE=" + pref + "allign_output.fas";
             param += " -OUTPUT=FASTA -DNAMATRIX=IUB -GAPOPEN=" + gapop + " -GAPEXT=" + gapext + " -TYPE=DNA -PWDNAMATRIX=IUB -PWGAPOPEN=" + gapop + " -PWGAPEXT=" + gapext;
             p = run.exec(param);
             BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -1738,15 +1752,15 @@ public class Corrector {
                 //Logger.getLogger(Corrector.class.getName()).log(Level.SEVERE, null, ex);
             }
             if (p.exitValue() != 0) {
-                System.out.println("Error in allgnment program");
+                System.err.println("Error in allgnment program");
             }
             stdInput.close();
-            DataSet alignment = new DataSet("allign_output.fas", 'c');
-            File f = new File("allign_input.fas");
+            DataSet alignment = new DataSet(pref + "allign_output.fas", 'c');
+            File f = new File(pref + "allign_input.fas");
             f.delete();
-            f = new File("allign_output.fas");
+            f = new File(pref + "allign_output.fas");
             f.delete();
-            f = new File("allign_input.dnd");
+            f = new File(pref + "allign_input.dnd");
             f.delete();
             String ref_align = "";
             String hapl_align = "";
@@ -1808,6 +1822,7 @@ public class Corrector {
 
             }
         }
+        DynamicOut.finishSteps();
         DataSet corhapl = new DataSet(hapl);
         corhapl.findHaplotypes();
         corhapl.PrintHaplotypes(addr + "_PostprocShift.fas");
@@ -1817,6 +1832,7 @@ public class Corrector {
     void postprocessHaplotypesNuclSwitch(String addr, String idmethod, double gapop, double gapext, int homop_size) throws FileNotFoundException, IOException // <editor-fold defaultstate="collapsed" desc=" DESCRIPTION ">
     {
         DataSet hapl = null;
+        String pref = fl.getParent() + File.separator;
         if (idmethod.equalsIgnoreCase("RAW")) {
             hapl = new DataSet(addr);
         } else {
@@ -1826,14 +1842,14 @@ public class Corrector {
         int count = 0;
         for (Read h : hapl.reads) {
             count++;
-            System.out.println("Aligning " + count + "\\" + hapl.reads.size());
+            DynamicOut.printStep("Aligning " + count + "\\" + hapl.reads.size());
             Runtime run = Runtime.getRuntime();
             Process p = null;
-            FileWriter fw_alin = new FileWriter("allign_input.fas");
+            FileWriter fw_alin = new FileWriter(pref + "allign_input.fas");
             fw_alin.write(">" + "reference" + "\n" + ref.nucl + "\n");
             fw_alin.write(">" + h.name + "\n" + h.nucl + "\n");
             fw_alin.close();
-            String param = "ClustalW2//clustalw2 -INFILE=" + "allign_input.fas" + " -OUTFILE=" + "allign_output.fas";
+            String param = "ClustalW2" + File.separator +"clustalw2 -INFILE=" + pref + "allign_input.fas" + " -OUTFILE=" + pref + "allign_output.fas";
             param += " -OUTPUT=FASTA -DNAMATRIX=IUB -GAPOPEN=" + gapop + " -GAPEXT=" + gapext + " -TYPE=DNA -PWDNAMATRIX=IUB -PWGAPOPEN=" + gapop + " -PWGAPEXT=" + gapext;
             p = run.exec(param);
             BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -1847,15 +1863,15 @@ public class Corrector {
                 // Logger.getLogger(Corrector.class.getName()).log(Level.SEVERE, null, ex);
             }
             if (p.exitValue() != 0) {
-                System.out.println("Error in allgnment program");
+                System.err.println("Error in allgnment program");
             }
             stdInput.close();
-            DataSet alignment = new DataSet("allign_output.fas", 'c');
-            File f = new File("allign_input.fas");
+            DataSet alignment = new DataSet(pref + "allign_output.fas", 'c');
+            File f = new File(pref + "allign_input.fas");
             f.delete();
-            f = new File("allign_output.fas");
+            f = new File(pref + "allign_output.fas");
             f.delete();
-            f = new File("allign_input.dnd");
+            f = new File(pref + "allign_input.dnd");
             f.delete();
             String ref_align = "";
             String hapl_align = "";
@@ -2040,6 +2056,7 @@ public class Corrector {
 
             }
         }
+        DynamicOut.finishSteps();
         DataSet corhapl = new DataSet(hapl);
 //           corhapl.PrintCorrectedReads(addr + "_correctedShiftReads.fas");
         corhapl.findHaplotypes();
@@ -2093,22 +2110,23 @@ public class Corrector {
     }
 
     int findClosest(String refer, double gapop, double gapext) throws IOException {
+        String pref = fl.getParent() + File.separator;
         int min = 100000;
         String minName = "";
         int count = 0;
         for (Read r : ds.reads) {
             count++;
-            System.out.println("Aligning " + count + "\\" + ds.reads.size());
+            DynamicOut.printStep("Aligning " + count + "\\" + ds.reads.size());
             if (r.getLength() < 200) {
                 continue;
             }
             Runtime run = Runtime.getRuntime();
             Process p = null;
-            FileWriter fw_alin = new FileWriter("allign_input.fas");
+            FileWriter fw_alin = new FileWriter(pref + "allign_input.fas");
             fw_alin.write(">" + "reference" + "\n" + refer + "\n");
             fw_alin.write(">" + r.name + "\n" + r.nucl + "\n");
             fw_alin.close();
-            String param = "ClustalW2//clustalw2 -INFILE=" + "allign_input.fas" + " -OUTFILE=" + "allign_output.fas";
+            String param = "ClustalW2" + File.separator +"clustalw2 -INFILE=" + pref + "allign_input.fas" + " -OUTFILE=" + pref + "allign_output.fas";
             param += " -OUTPUT=FASTA -DNAMATRIX=IUB -GAPOPEN=" + gapop + " -GAPEXT=" + gapext + " -TYPE=DNA -PWDNAMATRIX=IUB -PWGAPOPEN=" + gapop + " -PWGAPEXT=" + gapext;
             p = run.exec(param);
             BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -2122,15 +2140,15 @@ public class Corrector {
                 Logger.getLogger(Corrector.class.getName()).log(Level.SEVERE, null, ex);
             }
             if (p.exitValue() != 0) {
-                System.out.println("Error in allgnment program");
+                System.err.println("Error in allgnment program");
             }
             stdInput.close();
-            DataSet alignment = new DataSet("allign_output.fas", 'c');
-            File f = new File("allign_input.fas");
+            DataSet alignment = new DataSet(pref + "allign_output.fas", 'c');
+            File f = new File(pref + "allign_input.fas");
             f.delete();
-            f = new File("allign_output.fas");
+            f = new File(pref + "allign_output.fas");
             f.delete();
-            f = new File("allign_input.dnd");
+            f = new File(pref + "allign_input.dnd");
             f.delete();
             String ref_align = "";
             String read_align = "";
@@ -2161,6 +2179,7 @@ public class Corrector {
                 minName = r.name;
             }
         }
+        DynamicOut.finishSteps();
         System.out.println(min);
         System.out.println(minName);
         return min;
@@ -2168,19 +2187,20 @@ public class Corrector {
 
     int findClosestHapl(String refer, double gapop, double gapext) throws IOException // <editor-fold defaultstate="collapsed" desc=" DESCRIPTION ">
     {
+        String pref = fl.getParent() + File.separator;
         int min = 100000;
         String minName = "";
         int count = 0;
         for (Haplotype r : ds.haplotypes) {
             count++;
-            System.out.println("Aligning " + count + "\\" + ds.haplotypes.size());
+            DynamicOut.printStep("Aligning " + count + "\\" + ds.haplotypes.size());
             Runtime run = Runtime.getRuntime();
             Process p = null;
-            FileWriter fw_alin = new FileWriter("allign_input.fas");
+            FileWriter fw_alin = new FileWriter(pref + "allign_input.fas");
             fw_alin.write(">" + "reference" + "\n" + refer + "\n");
             fw_alin.write(">" + r.name + "\n" + r.nucl + "\n");
             fw_alin.close();
-            String param = "ClustalW2//clustalw2 -INFILE=" + "allign_input.fas" + " -OUTFILE=" + "allign_output.fas";
+            String param = "ClustalW2" + File.separator +"clustalw2 -INFILE=" + pref + "allign_input.fas" + " -OUTFILE=" + pref + "allign_output.fas";
             param += " -OUTPUT=FASTA -DNAMATRIX=IUB -GAPOPEN=" + gapop + " -GAPEXT=" + gapext + " -TYPE=DNA -PWDNAMATRIX=IUB -PWGAPOPEN=" + gapop + " -PWGAPEXT=" + gapext;
             p = run.exec(param);
             BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -2188,15 +2208,20 @@ public class Corrector {
             while ((s = stdInput.readLine()) != null) {
 //                        System.out.println(s);
             }
-            if (p.exitValue() != 0) {
-                System.out.println("Error in allgnment program");
+            try {
+                p.waitFor();
+            } catch (InterruptedException ex) {
+                Logger.getLogger(Corrector.class.getName()).log(Level.SEVERE, null, ex);
             }
-            DataSet alignment = new DataSet("allign_output.fas", 'c');
-            File f = new File("allign_input.fas");
+            if (p.exitValue() != 0) {
+                System.err.println("Error in allgnment program");
+            }
+            DataSet alignment = new DataSet(pref + "allign_output.fas", 'c');
+            File f = new File(pref + "allign_input.fas");
             f.delete();
-            f = new File("allign_output.fas");
+            f = new File(pref + "allign_output.fas");
             f.delete();
-            f = new File("allign_input.dnd");
+            f = new File(pref + "allign_input.dnd");
             f.delete();
             String ref_align = "";
             String read_align = "";

@@ -157,7 +157,7 @@ public class ErrorCorrection {
              ds = cr.CorrectedReads();*/
 
 
-            String dset_file_name = fl.getName();
+            String dset_file_name = fl.getAbsolutePath();
             ds.PrintCorrectedReads(fl.getAbsolutePath() + "_corrected.fas");
             /*                if (toFindHapl == 1)
              {
@@ -177,10 +177,11 @@ public class ErrorCorrection {
             toDelUncor = true;
             toPostprocessHeur = false; //???
             dset_file_name = dset_file_name + "_corrected.fas";
-            dset_file = dset_file_name;
+            dset_file = fl.getAbsolutePath();
 //                toFindHapl = 1;
 
             outdir = "results" + "(" + dset_file + ")";
+            //System.out.println(dset_file);
             ds = new DataSet(dset_file);
             ds.setK(k);
 //		ds.setFreqThr(f);
@@ -212,7 +213,6 @@ public class ErrorCorrection {
                  nucldiffparam = 3;*/
                 cr.postprocessHaplotypes(dset_file_name + "_haplotypes.fas", 15, 6.6, dominparampostpr);
                 cr.printRevComp(dset_file_name + "_haplotypes.fas_postprocessed.fas");
-                System.out.println(dset_file_name);
                 cr.postprocessHaplotypesPairwise(dset_file_name + "_haplotypes.fas_postprocessed.fas_RevComp.fas", 15, 6.6, dominparamonenucl, dominparamgen, nucldiffparam);
                 cr.postprocessHaplotypes(dset_file_name + "_haplotypes.fas_postprocessed.fas_RevComp.fas_PostprocPair.fas", 15, 6.6, dominparampostpr);
                 cr.postprocessHaplotypesPairwise(dset_file_name + "_haplotypes.fas_postprocessed.fas_RevComp.fas_PostprocPair.fas_postprocessed.fas", 15, 6.6, dominparamonenucl, dominparamgen, nucldiffparam);
