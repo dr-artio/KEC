@@ -18,14 +18,23 @@ public class ErrorCorrection {
     private static final String READS_PARAMETER = "reads";
     private static final String DOMINGEN_PARAMETER = "domgen";
     private static final String DOMINPOSTPROC_PARAMETER = "dompostproc";
-    static String env_path;
+    static File env_path;
     static {
         try {
-            env_path = new File(ErrorCorrection.class
+            
+            String path = ErrorCorrection.class
                     .getProtectionDomain().getCodeSource()
-                    .getLocation().toURI()).getParent() + File.separator;
+                    .getLocation().toURI().getPath();
+            env_path = new File(path).getParentFile();
+//            System.out.println(env_path);
+//            env_path = env_path.replace(" ", "\\ ");
+//            System.out.println(env_path);
+//            env_path = URLDecoder.decode(env_path, "UTF-8");
+//            if (!env_path.endsWith(File.separator))
+//                env_path += File.separator;
+            
         } catch (URISyntaxException ex) {
-            Logger.getLogger(Corrector.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ErrorCorrection.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     /**

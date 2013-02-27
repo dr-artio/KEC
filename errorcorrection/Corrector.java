@@ -844,18 +844,20 @@ public class Corrector {
         System.out.println("Postprocessing haplotypes \n");
         Runtime run = Runtime.getRuntime();
         Process p = null;
-        String s = ErrorCorrection.env_path + "ClustalW2" + File.separator +"clustalw2 -INFILE=" + addr + 
-                " -OUTFILE=" + addr + "_allign.fas";
-        s += " -OUTPUT=FASTA -DNAMATRIX=IUB -GAPOPEN=" + gapop + 
-                " -GAPEXT=" + gapext + " -TYPE=DNA -PWDNAMATRIX=IUB -PWGAPOPEN=" + 
-                gapop + " -PWGAPEXT=" + gapext;
+        String[] s = new String[]{"ClustalW2" + File.separator +"clustalw2",
+                "-INFILE=" + addr, 
+                "-OUTFILE=" + addr + "_allign.fas",
+        "-OUTPUT=FASTA", "-DNAMATRIX=IUB", "-GAPOPEN=" + gapop, 
+                "-GAPEXT=" + gapext, "-TYPE=DNA", "-PWDNAMATRIX=IUB", 
+                "-PWGAPOPEN=" + gapop, "-PWGAPEXT=" + gapext};
 
-        p = run.exec(s);
+        p = run.exec(s, null, ErrorCorrection.env_path);
         BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
 
         System.out.println("Here is the standard output of the command:\n");
-        while ((s = stdInput.readLine()) != null) {
-            DynamicOut.printStep(s);
+        String ss;
+        while ((ss = stdInput.readLine()) != null) {
+            DynamicOut.printStep(ss);
         }
         p.waitFor();
         if (p.exitValue() != 0) {
@@ -1181,15 +1183,21 @@ public class Corrector {
             System.out.println("Postprocessing haplotypes pairwise \n");
             Runtime run = Runtime.getRuntime();
             Process p = null;
-            String s = ErrorCorrection.env_path + "ClustalW2" + File.separator +"clustalw2 -INFILE=" + addr + " -OUTFILE=" + addr + "_allign.fas";
-            s += " -OUTPUT=FASTA -DNAMATRIX=IUB -GAPOPEN=" + gapop + " -GAPEXT=" + gapext + " -TYPE=DNA -PWDNAMATRIX=IUB -PWGAPOPEN=" + gapop + " -PWGAPEXT=" + gapext;
+            String[] s = new String[]{"ClustalW2" + File.separator +"clustalw2",
+                "-INFILE=" + addr,
+                "-OUTFILE=" + addr +"_allign.fas",
+            "-OUTPUT=FASTA", "-DNAMATRIX=IUB", "-GAPOPEN=" + gapop, 
+            "-GAPEXT=" + gapext, "-TYPE=DNA",
+                    "-PWDNAMATRIX=IUB", "-PWGAPOPEN=" + gapop,
+                    "-PWGAPEXT=" + gapext};
 
-            p = run.exec(s);
+            p = run.exec(s, null, ErrorCorrection.env_path);
             BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
 
             System.out.println("Here is the standard output of the command:\n");
-            while ((s = stdInput.readLine()) != null) {
-                DynamicOut.printStep(s);
+            String ss;
+            while ((ss = stdInput.readLine()) != null) {
+                DynamicOut.printStep(ss);
             }
             p.waitFor();
             if (p.exitValue() != 0) {
@@ -1209,11 +1217,11 @@ public class Corrector {
                 double d = 10000 * Double.parseDouble(st.nextToken());
                 r.frequency = (int) d;
             }
-            s = brtree.readLine();
+            ss = brtree.readLine();
             String treestr = "";
-            while (s != null) {
+            while (ss != null) {
                 treestr += s;
-                s = brtree.readLine();
+                ss = brtree.readLine();
             }
             brtree.close();
             HashSet<ArrayList<Read>> closepairs = new HashSet<ArrayList<Read>>();
@@ -1288,15 +1296,17 @@ public class Corrector {
                             fw_alin.write(">" + ar.get(0).name + "\n" + ar.get(0).nucl + "\n");
                             fw_alin.write(">" + ar.get(1).name + "\n" + ar.get(1).nucl + "\n");
                             fw_alin.close();
-                            String param = ErrorCorrection.env_path + "ClustalW2" + File.separator +"clustalw2 -INFILE=" + pref + "allign_input.fas" + 
-                                    " -OUTFILE=" + pref + "allign_output.fas";
-                            param += " -OUTPUT=FASTA -DNAMATRIX=IUB -GAPOPEN=" + gapop + 
-                                    " -GAPEXT=" + gapext + " -TYPE=DNA -PWDNAMATRIX=IUB -PWGAPOPEN=" + 
-                                    gapop + " -PWGAPEXT=" + gapext;
-                            p = run.exec(param);
+                            String[] param = new String[]{"ClustalW2" + File.separator +"clustalw2",
+                               "-INFILE=" + pref + "allign_input.fas",  
+                               "-OUTFILE=" + pref + "allign_output.fas",
+                            "-OUTPUT=FASTA", "-DNAMATRIX=IUB", "-GAPOPEN=" + gapop, 
+                                    "-GAPEXT=" + gapext, "-TYPE=DNA", "-PWDNAMATRIX=IUB",
+                                    "-PWGAPOPEN=" + gapop, " -PWGAPEXT=" + gapext};
+                            p = run.exec(param, null, ErrorCorrection.env_path);
                             stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
-                            while ((s = stdInput.readLine()) != null) {
-                                DynamicOut.printStep(s);
+                            
+                            while ((ss = stdInput.readLine()) != null) {
+                                DynamicOut.printStep(ss);
                             }
                             p.waitFor();
                             if (p.exitValue() != 0) {
@@ -1372,14 +1382,16 @@ public class Corrector {
                 fw_alin.write(">" + large.name + "\n" + large.nucl + "\n");
                 fw_alin.write(">" + small.name + "\n" + small.nucl + "\n");
                 fw_alin.close();
-                String param = ErrorCorrection.env_path + "ClustalW2" + File.separator +"clustalw2 -INFILE=" + 
-                        pref + "allign_input.fas" + " -OUTFILE=" +
-                        pref + "allign_output.fas";
-                param += " -OUTPUT=FASTA -DNAMATRIX=IUB -GAPOPEN=" + gapop + " -GAPEXT=" + gapext + " -TYPE=DNA -PWDNAMATRIX=IUB -PWGAPOPEN=" + gapop + " -PWGAPEXT=" + gapext;
-                p = run.exec(param);
+                String[] param = new String[]{"ClustalW2" + File.separator +"clustalw2",
+                        "-INFILE=" + pref + "allign_input.fas",
+                        " -OUTFILE=" + pref + "allign_output.fas",
+                "-OUTPUT=FASTA","-DNAMATRIX=IUB","-GAPOPEN=" + gapop,
+                "-GAPEXT=" + gapext, "-TYPE=DNA", "-PWDNAMATRIX=IUB",
+                "-PWGAPOPEN=" + gapop, "-PWGAPEXT=" + gapext};
+                p = run.exec(param, null, ErrorCorrection.env_path);
                 stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
-                while ((s = stdInput.readLine()) != null) {
-                    DynamicOut.printStep(s);
+                while ((ss = stdInput.readLine()) != null) {
+                    DynamicOut.printStep(ss);
                 }
                 p.waitFor();
                 if (p.exitValue() != 0) {
@@ -1739,9 +1751,13 @@ public class Corrector {
             fw_alin.write(">" + "reference" + "\n" + ref.nucl + "\n");
             fw_alin.write(">" + h.name + "\n" + h.nucl + "\n");
             fw_alin.close();
-            String param = ErrorCorrection.env_path + "ClustalW2" + File.separator +"clustalw2 -INFILE=" + pref + "allign_input.fas" + " -OUTFILE=" + pref + "allign_output.fas";
-            param += " -OUTPUT=FASTA -DNAMATRIX=IUB -GAPOPEN=" + gapop + " -GAPEXT=" + gapext + " -TYPE=DNA -PWDNAMATRIX=IUB -PWGAPOPEN=" + gapop + " -PWGAPEXT=" + gapext;
-            p = run.exec(param);
+            String[] param = new String[]{"ClustalW2" + File.separator +"clustalw2",
+                    "-INFILE=" + pref + "allign_input.fas",
+                    "-OUTFILE=" + pref + "allign_output.fas",
+            "-OUTPUT=FASTA","-DNAMATRIX=IUB","-GAPOPEN=" + gapop,
+            "-GAPEXT=" + gapext, "-TYPE=DNA", "-PWDNAMATRIX=IUB",
+            "-PWGAPOPEN=" + gapop, "-PWGAPEXT=" + gapext};
+            p = run.exec(param, null, ErrorCorrection.env_path);
             BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
             String s;
             while ((s = stdInput.readLine()) != null) {
@@ -1850,9 +1866,13 @@ public class Corrector {
             fw_alin.write(">" + "reference" + "\n" + ref.nucl + "\n");
             fw_alin.write(">" + h.name + "\n" + h.nucl + "\n");
             fw_alin.close();
-            String param = ErrorCorrection.env_path + "ClustalW2" + File.separator +"clustalw2 -INFILE=" + pref + "allign_input.fas" + " -OUTFILE=" + pref + "allign_output.fas";
-            param += " -OUTPUT=FASTA -DNAMATRIX=IUB -GAPOPEN=" + gapop + " -GAPEXT=" + gapext + " -TYPE=DNA -PWDNAMATRIX=IUB -PWGAPOPEN=" + gapop + " -PWGAPEXT=" + gapext;
-            p = run.exec(param);
+            String[] param = new String[]{"ClustalW2" + File.separator +"clustalw2", 
+                "-INFILE=" + pref + "allign_input.fas", 
+                "-OUTFILE=" + pref + "allign_output.fas",
+                "-OUTPUT=FASTA","-DNAMATRIX=IUB","-GAPOPEN=" + gapop,
+                "-GAPEXT=" + gapext, "-TYPE=DNA", "-PWDNAMATRIX=IUB",
+                "-PWGAPOPEN=" + gapop, "-PWGAPEXT=" + gapext};
+            p = run.exec(param, null, ErrorCorrection.env_path);
             BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
             String s;
             while ((s = stdInput.readLine()) != null) {
@@ -2127,9 +2147,14 @@ public class Corrector {
             fw_alin.write(">" + "reference" + "\n" + refer + "\n");
             fw_alin.write(">" + r.name + "\n" + r.nucl + "\n");
             fw_alin.close();
-            String param = ErrorCorrection.env_path + "ClustalW2" + File.separator +"clustalw2 -INFILE=" + pref + "allign_input.fas" + " -OUTFILE=" + pref + "allign_output.fas";
-            param += " -OUTPUT=FASTA -DNAMATRIX=IUB -GAPOPEN=" + gapop + " -GAPEXT=" + gapext + " -TYPE=DNA -PWDNAMATRIX=IUB -PWGAPOPEN=" + gapop + " -PWGAPEXT=" + gapext;
-            p = run.exec(param);
+            String[] param = new String[]{"ClustalW2" + File.separator +"clustalw2",
+                    "-INFILE=" + pref + "allign_input.fas",
+                    "-OUTFILE=" + pref + "allign_output.fas",
+            "-OUTPUT=FASTA","-DNAMATRIX=IUB","-GAPOPEN=" + gapop,
+            "-GAPEXT=" + gapext, "-TYPE=DNA", "-PWDNAMATRIX=IUB",
+            "-PWGAPOPEN=" + gapop, "-PWGAPEXT=" + gapext}; 
+
+            p = run.exec(param, null, ErrorCorrection.env_path);
             BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
             String s;
             while ((s = stdInput.readLine()) != null) {
@@ -2201,9 +2226,13 @@ public class Corrector {
             fw_alin.write(">" + "reference" + "\n" + refer + "\n");
             fw_alin.write(">" + r.name + "\n" + r.nucl + "\n");
             fw_alin.close();
-            String param = ErrorCorrection.env_path + "ClustalW2" + File.separator +"clustalw2 -INFILE=" + pref + "allign_input.fas" + " -OUTFILE=" + pref + "allign_output.fas";
-            param += " -OUTPUT=FASTA -DNAMATRIX=IUB -GAPOPEN=" + gapop + " -GAPEXT=" + gapext + " -TYPE=DNA -PWDNAMATRIX=IUB -PWGAPOPEN=" + gapop + " -PWGAPEXT=" + gapext;
-            p = run.exec(param);
+            String[] param = new String[]{"ClustalW2" + File.separator +"clustalw2",
+                    "-INFILE=" + pref + "allign_input.fas",
+                    "-OUTFILE=" + pref + "allign_output.fas",
+            "-OUTPUT=FASTA","-DNAMATRIX=IUB","-GAPOPEN=" + gapop,
+            "-GAPEXT=" + gapext, "-TYPE=DNA", "-PWDNAMATRIX=IUB",
+            "-PWGAPOPEN=" + gapop, "-PWGAPEXT=" + gapext};       
+            p = run.exec(param, null, ErrorCorrection.env_path);
             BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
             String s;
             while ((s = stdInput.readLine()) != null) {

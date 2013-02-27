@@ -585,10 +585,10 @@ public class DataSet {
                 System.gc();
                 count1 = 0;
             }
-            String exPath = ErrorCorrection.env_path + "fams" + File.separator +
-                    "fams 0 0 200 " + 
-                    "kmer" + count + "data " + pref;
-            p = run.exec(exPath);
+            String[] exPath = new String[] {"fams" + File.separator +
+                    "fams", "0", "0", "200", 
+                    "kmer" + count + "data", pref};
+            p = run.exec(exPath, null, ErrorCorrection.env_path);
 //			 p=run.exec("fams 0 0 200 " + "kmer" + count + "data .\\"); 
             try {
                 p.waitFor();
