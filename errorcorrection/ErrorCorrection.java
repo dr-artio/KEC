@@ -198,7 +198,7 @@ public class ErrorCorrection {
             toDelUncor = true;
             toPostprocessHeur = false; //???
             dset_file_name = dset_file_name + "_corrected.fas";
-            dset_file = fl.getAbsolutePath();
+            dset_file = dset_file_name;
 //                toFindHapl = 1;
 
             outdir = "results" + "(" + dset_file + ")";
