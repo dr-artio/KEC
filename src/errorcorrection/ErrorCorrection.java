@@ -16,35 +16,38 @@ public class ErrorCorrection {
     private static final String DOMINGEN_PARAMETER = "domgen";
     private static final String DOMINPOSTPROC_PARAMETER = "dompostproc";
     static File env_path;
+
     static {
         env_path = new File(".");
     }
+
     /**
      * @param args
      * @throws IOException
      */
-    public static void main(String[] args) throws IOException, InterruptedException {
-        ArgumentParser parser = ArgumentParsers.newArgumentParser("KEC.jar")
-                .description("k-mer Error Correction algorithm input arguments parser.");
+    public static void main(String[] args) 
+            throws IOException, InterruptedException {
+        ArgumentParser parser = ArgumentParsers.newArgumentParser("KEC")
+                .description("Correct genomic sequence data using k-mer count information.");
 
         int dominparamgen = 30;
-        int dominparampostpr = 30; //30
+        int dominparampostpr = 30;
 
         int k = 25;
         int nIter = 3;
-        int toFindHapl = 0;
+        boolean toFindHapl = false;
         int errorsseglen = 0;
         File fl = null;
 
         parser.addArgument(READS_PARAMETER)
-                .metavar("Reads File")
+                .metavar("ReadsFile")
                 .help("File containing raw sequencing data"
                 + " file with extension .fasta (.fas) "
                 + "reads in fasta format")
                 .type(File.class);
 
         parser.addArgument("-k").dest(K_PARAMETER)
-                .metavar("Size of k-mer")
+                .metavar("K")
                 .setDefault(k)
                 .type(Integer.class)
                 .help("Parameter k - the size of substrings (k-mers) "
@@ -59,11 +62,10 @@ public class ErrorCorrection {
                 + "greater than 3 than influence is not significant "
                 + "(Default: " + nIter + ")");
 
-        parser.addArgument(new String[]{"-a","--align"}).dest(ALIGN_PARAMETER)
-                .action(Arguments.storeConst())
-                .setConst(1)
-                .setDefault(toFindHapl)
-                .type(Integer.class)
+        parser.addArgument(new String[]{"-a", "--align"}).dest(ALIGN_PARAMETER)
+                .action(Arguments.storeTrue())
+                .setDefault(false)
+                .type(Boolean.class)
                 .help("Enable using of CLustalW for multiple sequence "
                 + "alignment for additional correction procedure (Default: "
                 + "do not align)");
@@ -98,7 +100,7 @@ public class ErrorCorrection {
             Namespace n = parser.parseArgs(args);
             k = n.getInt(K_PARAMETER);
             nIter = n.getInt(I_PARAMETER);
-            toFindHapl = n.getInt(ALIGN_PARAMETER);
+            toFindHapl = n.getBoolean(ALIGN_PARAMETER);
             errorsseglen = n.getInt(L_PARAMETER);
             fl = (File) n.get(READS_PARAMETER);
             dominparamgen = n.getInt(DOMINGEN_PARAMETER);
@@ -107,125 +109,86 @@ public class ErrorCorrection {
             parser.handleError(e);
             System.exit(1);
         }
-        {
 
-            int f = 100;
-            int lt = 50;
-            int mErPerc = 40;
-            int toClust = 1;
-            int dominparamonenucl = 5;
-            int nucldiffparam = 1;
-            int minNReads = 900;
-            boolean toPrintStat = true;
-            int maxz = 3;
-            int kmin = k - 15;
-            boolean toCalcHapl = true;
-            boolean toDelUncor = false;
-            boolean toPostprocessHeur = false; //???
+        int lt = 50;
+        int mErPerc = 40;
+        int toClust = 1;
+        int dominparamonenucl = 5;
+        int nucldiffparam = 1;
+        int minNReads = 900;
+        boolean toPrintStat = true;
+        int maxz = 3;
+        int kmin = k - 15;
+        boolean toCalcHapl = true;
+        boolean toDelUncor = false;
+        boolean toPostprocessHeur = false; //???
 
+        String dset_file = fl.getName();
+        String outdir = "results" + "(" + dset_file + ")";
+        DataSet ds = new DataSet(fl.getAbsolutePath());
+        ds.setK(k);
+        ds.setLenThr(lt);
+        ds.setMaxAllErrorsPerc(mErPerc);
+        ds.setFindErrorsSeglen(errorsseglen);
 
-            String dset_file = fl.getName();
-            String outdir = "results" + "(" + dset_file + ")";
-            DataSet ds = new DataSet(fl.getAbsolutePath());
-            ds.setK(k);
-//		ds.setFreqThr(f);
-            ds.setLenThr(lt);
-            ds.setMaxAllErrorsPerc(mErPerc);
-            ds.setFindErrorsSeglen(errorsseglen);
+        Corrector cr = new Corrector(ds);
+        cr.setMaxz(maxz);
+        cr.setNIter(nIter);
+        cr.setToClust(toClust);
+        cr.setKmin(kmin);
+        cr.setToRemoveAllUncorrect(toDelUncor);
+        cr.setToFindHapl(toCalcHapl);
+        cr.setToPrintStat(toPrintStat);
+        cr.setToPostprocessHeur(toPostprocessHeur);
+        cr.setMinNReads(minNReads);
+        cr.run();
+        ds = cr.CorrectedReads();
 
-            Corrector cr = new Corrector(ds);
-//                cr.printRevComp("Prep1-9.fas_corrected.fas_haplotypes.fas");
-//                cr.postprocessHaplotypesPairwise("HOC_34_1b.fas_corrected.fas_haplotypes.fas_postprocessed.fas_RevComp.fas_PostprocPair.fas_postprocessed.fas_PostprocPair.fas", 15, 6.6, 3, 3, nucldiffparam);
-            cr.setMaxz(maxz);
-            cr.setNIter(nIter);
-            cr.setToClust(toClust);
-            cr.setKmin(kmin);
-            cr.setToRemoveAllUncorrect(toDelUncor);
-            cr.setToFindHapl(toCalcHapl);
-            cr.setToPrintStat(toPrintStat);
-            cr.setToPostprocessHeur(toPostprocessHeur);
-            cr.setMinNReads(minNReads);
-            cr.run();
-            ds = cr.CorrectedReads();
+        String dset_file_name = fl.getAbsolutePath();
+        ds.PrintCorrectedReads(fl.getAbsolutePath() + "_corrected.fas");
 
-            /*                cr = new Corrector(ds);
-             cr.setMaxz(maxz);
-             cr.setNIter(1);
-             cr.setToClust(toClust);
-             cr.setKmin(kmin);
-             cr.setToRemoveAllUncorrect(false);
-             cr.setToFindHapl(toCalcHapl);
-             cr.setToPrintStat(toPrintStat);
-             cr.run();
-             ds = cr.CorrectedReads();*/
-
-
-            String dset_file_name = fl.getAbsolutePath();
-            ds.PrintCorrectedReads(fl.getAbsolutePath() + "_corrected.fas");
-            /*                if (toFindHapl == 1)
-             {
-             ds.PrintHaplotypes(dset_file_name+"_haplotypes.fas");
-             cr.postprocessHaplotypes(dset_file_name+"_haplotypes.fas",15,6.6, dominparampostpr);
-             //                    cr.postprocessHaplotypes(dset_file_name+"_haplotypes.fas_postprocessed.fas",1,1);
-             cr.printRevComp(dset_file_name +"_haplotypes.fas_postprocessed.fas");
-             }
-				
-             System.out.println("Finished!");*/
+        // SECOND RUN
+        maxz = 0;
+        nIter = 0;
+        toPrintStat = false;
+        toDelUncor = true;
+        toPostprocessHeur = false; //???
+        dset_file_name = dset_file_name + "_corrected.fas";
+        dset_file = dset_file_name;
+        
+        outdir = "results" + "(" + dset_file + ")";
+        ds = new DataSet(dset_file);
+        ds.setK(k);
+        ds.setLenThr(lt);
+        ds.setMaxAllErrorsPerc(mErPerc);
+        ds.setFindErrorsSeglen(errorsseglen);
+        minNReads = 1;
 
 
-            // SECOND RUN
-            maxz = 0;
-            nIter = 0;
-            toPrintStat = false;
-            toDelUncor = true;
-            toPostprocessHeur = false; //???
-            dset_file_name = dset_file_name + "_corrected.fas";
-            dset_file = dset_file_name;
-//                toFindHapl = 1;
+        cr = new Corrector(ds);
+        cr.setMaxz(maxz);
+        cr.setNIter(nIter);
+        cr.setToClust(toClust);
+        cr.setKmin(kmin);
+        cr.setToRemoveAllUncorrect(toDelUncor);
+        cr.setToFindHapl(toCalcHapl);
+        cr.setToPrintStat(toPrintStat);
+        cr.setToPostprocessHeur(toPostprocessHeur);
+        cr.setMinNReads(minNReads);
+        cr.run();
+        ds = cr.CorrectedReads();
 
-            outdir = "results" + "(" + dset_file + ")";
-            //System.out.println(dset_file);
-            ds = new DataSet(dset_file);
-            ds.setK(k);
-//		ds.setFreqThr(f);
-            ds.setLenThr(lt);
-            ds.setMaxAllErrorsPerc(mErPerc);
-            ds.setFindErrorsSeglen(errorsseglen);
-            minNReads = 1;
-
-
-            cr = new Corrector(ds);
-            cr.setMaxz(maxz);
-            cr.setNIter(nIter);
-            cr.setToClust(toClust);
-            cr.setKmin(kmin);
-            cr.setToRemoveAllUncorrect(toDelUncor);
-            cr.setToFindHapl(toCalcHapl);
-            cr.setToPrintStat(toPrintStat);
-            cr.setToPostprocessHeur(toPostprocessHeur);
-            cr.setMinNReads(minNReads);
-            cr.run();
-            ds = cr.CorrectedReads();
-
-            ds.PrintCorrectedReads(dset_file_name + "_corrected.fas");
-            ds.PrintHaplotypes(dset_file_name + "_haplotypes.fas");
-            if (toFindHapl == 1) {
-                /*                    dominparamgen = 5;
-                 dominparampostpr = 5;
-                 dominparamonenucl = 5;
-                 nucldiffparam = 3;*/
-                cr.postprocessHaplotypes(dset_file_name + "_haplotypes.fas", 15, 6.6, dominparampostpr);
-                cr.printRevComp(dset_file_name + "_haplotypes.fas_postprocessed.fas");
-                cr.postprocessHaplotypesPairwise(dset_file_name + "_haplotypes.fas_postprocessed.fas_RevComp.fas", 15, 6.6, dominparamonenucl, dominparamgen, nucldiffparam);
-                cr.postprocessHaplotypes(dset_file_name + "_haplotypes.fas_postprocessed.fas_RevComp.fas_PostprocPair.fas", 15, 6.6, dominparampostpr);
-                cr.postprocessHaplotypesPairwise(dset_file_name + "_haplotypes.fas_postprocessed.fas_RevComp.fas_PostprocPair.fas_postprocessed.fas", 15, 6.6, dominparamonenucl, dominparamgen, nucldiffparam);
-            }
-//		cr.printRevComp(dset_file_name +"_haplotypes.fas_postprocessed.fas");
-
-            System.out.println("Finished!");
-
+        ds.PrintCorrectedReads(dset_file_name + "_corrected.fas");
+        ds.PrintHaplotypes(dset_file_name + "_haplotypes.fas");
+        
+        if (toFindHapl) {
+            cr.postprocessHaplotypes(dset_file_name + "_haplotypes.fas", 15, 6.6, dominparampostpr);
+            cr.printRevComp(dset_file_name + "_haplotypes.fas_postprocessed.fas");
+            cr.postprocessHaplotypesPairwise(dset_file_name + "_haplotypes.fas_postprocessed.fas_RevComp.fas", 15, 6.6, dominparamonenucl, dominparamgen, nucldiffparam);
+            cr.postprocessHaplotypes(dset_file_name + "_haplotypes.fas_postprocessed.fas_RevComp.fas_PostprocPair.fas", 15, 6.6, dominparampostpr);
+            cr.postprocessHaplotypesPairwise(dset_file_name + "_haplotypes.fas_postprocessed.fas_RevComp.fas_PostprocPair.fas_postprocessed.fas", 15, 6.6, dominparamonenucl, dominparamgen, nucldiffparam);
         }
-
-
+        System.out.println("Finished!");
+        System.exit(0);
     }
 }

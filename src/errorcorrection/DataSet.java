@@ -1687,53 +1687,6 @@ public class DataSet {
 
         double[] clust = new double[valuesDistribution.length + 1];
         double[] clust1 = new double[valuesDistribution.length + 1];
-        /*		File fclust = new File(file_name + "data.txt");
-         FileWriter fwclust = new FileWriter(fclust);
-         int z = valuesDistribution1.length-1;
-         fwclust.write(z + " " + 1 + "\n");
-         for (int i = 1; i < valuesDistribution1.length; i++)
-         {
-         int o = valuesDistribution1[i] + i;
-         fwclust.write(o + "\n");
-         //                         fwclust.write(i + " " + valuesDistribution1[i] + "\n");
-         }
-         fwclust.close();
-
-         Runtime run=Runtime.getRuntime();
-         Process p=null;
-         p=run.exec("fams//fams.exe 0 0 200 " + file_name + "data .\\");
-         try {
-         p.waitFor();
-         } catch (InterruptedException e) {
-         e.printStackTrace();
-         }
-
-         if (p.exitValue()!= 0)
-         {
-         System.out.println("Error in clustering program");
-         }
-
-         File fout = new File("out_" + file_name + "data.txt");
-
-
-         FileReader fr = new FileReader(fout);
-         BufferedReader br = new BufferedReader(fr);
-
-         String s = br.readLine();
-         int iclust = 1;
-         while(s!= null)
-         {
-         StringTokenizer st = new StringTokenizer(s," ");
-         while (st.hasMoreTokens())
-         {
-         clust[iclust] = Double.parseDouble(st.nextToken());
-         //                       clust1[iclust] = Double.parseDouble(st.nextToken());
-         }
-         iclust++;
-         s = br.readLine();
-         }
-
-         fclust.delete();*/
 
         double[] variations = new double[valuesDistribution.length + 1];
         int varseglen = 25;
@@ -1750,34 +1703,14 @@ public class DataSet {
             fw1.write(i + " " + valuesDistribution1[i] + " " + clust[i] + " " + clust1[i] + " " + variations[i] + "\n");
         }
         fw1.close();
-
-
-        /*                FileWriter fw2 = new FileWriter(dir + fol_sign + "kvalues_distribution1_boxes" +"(k=" + k + ")" +"("+dir+")"+ ".txt");
-         int count2 = 0;
-         int sum = 0;
-         for (int i = 1; i < valuesDistribution1.length; i++)
-         {
-         if (count2 < 20)
-         {
-         count2++;
-         sum+=valuesDistribution1[i];
-         }
-         else
-         {
-         fw2.write(i + " " + sum + "\n");
-         sum = 0;
-         count2 = 0;
-         }
-         }
-         fw2.close();*/
     }
 
     void PrintReadsFreqDistrib(String addr) throws IOException {
-        FileWriter fw = new FileWriter(addr);
-        for (Read r : reads) {
-            fw.write(r.frequency + "\n");
+        try(FileWriter fw = new FileWriter(addr)) {
+            for (Read r : reads) {
+                fw.write(r.frequency + "\n");
+            }        
         }
-        fw.close();
     }
 
     void calcDirection(String ref_file, double gapop, double gapext) throws IOException {
@@ -1790,13 +1723,13 @@ public class DataSet {
                 String q = "Direct";
                 Runtime run = Runtime.getRuntime();
                 Process p = null;
-                FileWriter fw_alin = new FileWriter("allign_input.fas");
+                FileWriter fw_alin = new FileWriter("align_input.fas");
                 fw_alin.write(r.name + "\n");
                 fw_alin.write(r.nucl + "\n");
                 fw_alin.write(">reference" + "\n");
                 fw_alin.write(s_ref + "\n");
                 fw_alin.close();
-                String param = "ClustalW2//clustalw2 -INFILE=" + "allign_input.fas" + " -OUTFILE=" + "allign_output.fas";
+                String param = "ClustalW2//clustalw2 -INFILE=" + "align_input.fas" + " -OUTFILE=" + "align_output.fas";
                 param += " -OUTPUT=FASTA -DNAMATRIX=IUB -GAPOPEN=" + gapop + " -GAPEXT=" + gapext + " -TYPE=DNA -PWDNAMATRIX=IUB -PWGAPOPEN=" + gapop + " -PWGAPEXT=" + gapext;
 
                 p = run.exec(param);
@@ -1808,10 +1741,10 @@ public class DataSet {
                 if (p.exitValue() != 0) {
                     System.err.println("Error in allgnment program");
                 }
-                DataSet allignment = new DataSet("allign_output.fas", 'c');
+                DataSet alignment = new DataSet("align_output.fas", 'c');
                 String al_read = "";
                 String al_ref = "";
-                for (Read r1 : allignment.reads) {
+                for (Read r1 : alignment.reads) {
                     if (!r1.name.contains("reference")) {
                         al_read = r1.getNucl();
                     } else {
@@ -1844,84 +1777,15 @@ public class DataSet {
                 s_ref = rev_ref;
                 q = "Reverse";
                 String pref = new File(file_name).getParent() + File.separator;
-                File f = new File(pref +"allign_input.fas");
+                File f = new File(pref +"align_input.fas");
                 f.delete();
-                f = new File(pref + "allign_output.fas");
+                f = new File(pref + "align_output.fas");
                 f.delete();
-                f = new File(pref + "allign_input.dnd");
+                f = new File(pref + "align_input.dnd");
                 f.delete();
             }
             fw.write("\n");
         }
-        fw.close();
-    }
-
-    void convertZoyaData(String addr) throws FileNotFoundException, IOException {
-        FileReader fr = new FileReader(addr);
-        BufferedReader br = new BufferedReader(fr);
-        FileWriter fw = new FileWriter(addr + "_converted.fas");
-
-        String s = br.readLine();
-        while (s.equalsIgnoreCase("")) {
-            s = br.readLine();
-        }
-
-        String nucl = new String();
-        String name = new String();
-        name = "";
-        int i = 1;
-        int j = s.length();
-        while ((i < s.length()) && (s.charAt(i) != ' ')) {
-            name += s.charAt(i);
-            i++;
-        }
-        s = br.readLine();
-        try {
-            while (s != null) {
-//			System.out.println("Reading " + name);
-
-                if (s.length() == 0) {
-                    s = br.readLine();
-                    continue;
-                }
-                if (s.charAt(0) == '>') {
-                    StringTokenizer st = new StringTokenizer(name, "_");
-                    st.nextToken();
-                    st.nextToken();
-                    st.nextToken();
-                    st.nextToken();
-                    st.nextToken();
-                    int mult = Integer.parseInt(st.nextToken());
-                    for (int u = 0; u < mult; u++) {
-                        fw.write(">" + name + "_" + u + "\n" + nucl + "\n");
-                    }
-                    nucl = "";
-                    name = "";
-                    i = 1;
-                    while ((i < s.length()) && (s.charAt(i) != ' ')) {
-                        name += s.charAt(i);
-                        i++;
-                    }
-                } else {
-                    nucl += s.toUpperCase();
-                }
-                s = br.readLine();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        //	reads.add(new Read(nucl, name));
-        StringTokenizer st = new StringTokenizer(name, "_");
-        st.nextToken();
-        st.nextToken();
-        st.nextToken();
-        st.nextToken();
-        st.nextToken();
-        int mult = Integer.parseInt(st.nextToken());
-        for (int u = 0; u < mult; u++) {
-            fw.write(">" + name + "_" + u + "\n" + nucl + "\n");
-        }
-        fr.close();
         fw.close();
     }
 
@@ -1947,7 +1811,7 @@ public class DataSet {
             System.out.println(r.name + "//" + reads.size());
             Runtime run = Runtime.getRuntime();
             Process p = null;
-            FileWriter fw_alin = new FileWriter("allign_input.fas");
+            FileWriter fw_alin = new FileWriter("align_input.fas");
             String ncl = "";
             for (int i = r.nucl.length() - 1; i >= 0; i--) {
                 if (r.nucl.charAt(i) == 'A') {
@@ -1966,7 +1830,7 @@ public class DataSet {
             fw_alin.write(">" + r.name + "\n" + ncl + "\n");
             fw_alin.write(">" + clone.name + "\n" + clone.nucl + "\n");
             fw_alin.close();
-            String param = "ClustalW2//clustalw2 -INFILE=" + "allign_input.fas" + " -OUTFILE=" + "allign_output.fas";
+            String param = "ClustalW2//clustalw2 -INFILE=" + "align_input.fas" + " -OUTFILE=" + "align_output.fas";
             param += " -OUTPUT=FASTA -DNAMATRIX=IUB -GAPOPEN=" + gapop + " -GAPEXT=" + gapext + " -TYPE=DNA -PWDNAMATRIX=IUB -PWGAPOPEN=" + gapop + " -PWGAPEXT=" + gapext;
             p = run.exec(param);
             BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -1977,12 +1841,12 @@ public class DataSet {
             if (p.exitValue() != 0) {
                 System.err.println("Error in allgnment program");
             }
-            DataSet alignment = new DataSet("allign_output.fas", 'c');
-            /*                    File f = new File("allign_input.fas");
+            DataSet alignment = new DataSet("align_output.fas", 'c');
+            /*                    File f = new File("align_input.fas");
              f.delete();
-             f = new File("allign_output.fas");
+             f = new File("align_output.fas");
              f.delete();
-             f = new File("allign_input.dnd");
+             f = new File("align_input.dnd");
              f.delete();*/
             String read_align = "";
             String clone_align = "";
@@ -2186,13 +2050,13 @@ public class DataSet {
             for (int i = 0; i <= 1; i++) {
                 Runtime run = Runtime.getRuntime();
                 Process p = null;
-                FileWriter fw_alin = new FileWriter("allign_input.fas");
+                FileWriter fw_alin = new FileWriter("align_input.fas");
                 fw_alin.write(">" + r.name + "\n");
                 fw_alin.write(nucl + "\n");
                 fw_alin.write(">reference" + "\n");
                 fw_alin.write(s_ref + "\n");
                 fw_alin.close();
-                String param = "ClustalW2//clustalw2 -INFILE=" + "allign_input.fas" + " -OUTFILE=" + "allign_output.fas";
+                String param = "ClustalW2//clustalw2 -INFILE=" + "align_input.fas" + " -OUTFILE=" + "align_output.fas";
                 param += " -OUTPUT=FASTA -DNAMATRIX=IUB -GAPOPEN=" + gapop + " -GAPEXT=" + gapext + " -TYPE=DNA -PWDNAMATRIX=IUB -PWGAPOPEN=" + gapop + " -PWGAPEXT=" + gapext;
 
                 p = run.exec(param);
@@ -2204,10 +2068,10 @@ public class DataSet {
                 if (p.exitValue() != 0) {
                     System.err.println("Error in allgnment program");
                 }
-                DataSet allignment = new DataSet("allign_output.fas", 'c');
+                DataSet alignment = new DataSet("align_output.fas", 'c');
                 String al_read = "";
                 String al_ref = "";
-                for (Read r1 : allignment.reads) {
+                for (Read r1 : alignment.reads) {
                     if (!r1.name.contains("reference")) {
                         al_read = r1.getNucl();
                     } else {
@@ -2225,11 +2089,11 @@ public class DataSet {
                     bestdirect = i;
                 }
                 String pref = new File(file_name).getParent() + File.separator;
-                File f = new File(pref + "allign_input.fas");
+                File f = new File(pref + "align_input.fas");
                 f.delete();
-                f = new File(pref + "allign_output.fas");
+                f = new File(pref + "align_output.fas");
                 f.delete();
-                f = new File(pref + "allign_input.dnd");
+                f = new File(pref + "align_input.dnd");
                 f.delete();
                 nucl = r.RevComp().getNucl();
             }
@@ -2260,13 +2124,13 @@ public class DataSet {
             for (int i = 0; i <= 1; i++) {
                 Runtime run = Runtime.getRuntime();
                 Process p = null;
-                FileWriter fw_alin = new FileWriter("allign_input.fas");
+                FileWriter fw_alin = new FileWriter("align_input.fas");
                 fw_alin.write(">" + r.name + "\n");
                 fw_alin.write(nucl + "\n");
                 fw_alin.write(">reference" + "\n");
                 fw_alin.write(s_ref + "\n");
                 fw_alin.close();
-                String param = "ClustalW2//clustalw2 -INFILE=" + "allign_input.fas" + " -OUTFILE=" + "allign_output.fas";
+                String param = "ClustalW2//clustalw2 -INFILE=" + "align_input.fas" + " -OUTFILE=" + "align_output.fas";
                 param += " -OUTPUT=FASTA -DNAMATRIX=IUB -GAPOPEN=" + gapop + " -GAPEXT=" + gapext + " -TYPE=DNA -PWDNAMATRIX=IUB -PWGAPOPEN=" + gapop + " -PWGAPEXT=" + gapext;
 
                 p = run.exec(param);
@@ -2278,10 +2142,10 @@ public class DataSet {
                 if (p.exitValue() != 0) {
                     System.err.println("Error in allgnment program");
                 }
-                DataSet allignment = new DataSet("allign_output.fas", 'c');
+                DataSet alignment = new DataSet("align_output.fas", 'c');
                 String al_read = "";
                 String al_ref = "";
-                for (Read r1 : allignment.reads) {
+                for (Read r1 : alignment.reads) {
                     if (!r1.name.contains("reference")) {
                         al_read = r1.getNucl();
                     } else {
@@ -2299,11 +2163,11 @@ public class DataSet {
                     bestdirect = i;
                 }
                 String pref = new File(file_name).getParent() + File.separator;
-                File f = new File(pref + "allign_input.fas");
+                File f = new File(pref + "align_input.fas");
                 f.delete();
-                f = new File(pref + "allign_output.fas");
+                f = new File(pref + "align_output.fas");
                 f.delete();
-                f = new File(pref + "allign_input.dnd");
+                f = new File(pref + "align_input.dnd");
                 f.delete();
                 nucl = r.RevComp().getNucl();
             }
@@ -2394,13 +2258,13 @@ public class DataSet {
                 DynamicOut.printStep("Calculating pair (" + i + "," + j + ") //" + reads.size());
                 Runtime run = Runtime.getRuntime();
                 Process p = null;
-                FileWriter fw_alin = new FileWriter("allign_input.fas");
+                FileWriter fw_alin = new FileWriter("align_input.fas");
                 fw_alin.write(">first" + "\n");
                 fw_alin.write(reads.get(i).getNucl() + "\n");
                 fw_alin.write(">second" + "\n");
                 fw_alin.write(reads.get(j).getNucl() + "\n");
                 fw_alin.close();
-                String param = "ClustalW2//clustalw2 -INFILE=" + "allign_input.fas" + " -OUTFILE=" + "allign_output.fas";
+                String param = "ClustalW2//clustalw2 -INFILE=" + "align_input.fas" + " -OUTFILE=" + "align_output.fas";
                 param += " -OUTPUT=FASTA -DNAMATRIX=IUB -GAPOPEN=" + gapop + " -GAPEXT=" + gapext + " -TYPE=DNA -PWDNAMATRIX=IUB -PWGAPOPEN=" + gapop + " -PWGAPEXT=" + gapext;
 
                 p = run.exec(param);
@@ -2412,22 +2276,22 @@ public class DataSet {
                 if (p.exitValue() != 0) {
                     System.err.println("Error in allgnment program");
                 }
-                DataSet allignment = new DataSet("allign_output.fas", 'c');
-                int l = allignment.reads.get(0).getLength();
+                DataSet alignment = new DataSet("align_output.fas", 'c');
+                int l = alignment.reads.get(0).getLength();
                 int mismatch = 0;
                 for (int k = 0; k < l; k++) {
-                    if (allignment.reads.get(0).getNucl().charAt(k) != allignment.reads.get(1).getNucl().charAt(k)) {
+                    if (alignment.reads.get(0).getNucl().charAt(k) != alignment.reads.get(1).getNucl().charAt(k)) {
                         mismatch++;
                     }
                 }
                 pd[i][j] = mismatch;
                 pd[j][i] = mismatch;
                 String pref = new File(file_name).getParent() + File.separator;
-                File f = new File(pref + "allign_input.fas");
+                File f = new File(pref + "align_input.fas");
                 f.delete();
-                f = new File(pref + "allign_output.fas");
+                f = new File(pref + "align_output.fas");
                 f.delete();
-                f = new File(pref + "allign_input.dnd");
+                f = new File(pref + "align_input.dnd");
                 f.delete();
             }
         }

@@ -7,7 +7,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -43,8 +42,7 @@ public class Corrector {
         minNReads = 1000;
     }
 
-    public Corrector() {
-    }
+    public Corrector() { }
 
     void setNIter(int j) {
         nIter = j;
@@ -99,7 +97,7 @@ public class Corrector {
         ArrayList<Integer> kmerssizes = new ArrayList<Integer>();
         ArrayList<Integer> allkmerssizes = new ArrayList<Integer>();
         ArrayList<Integer> usedmemory = new ArrayList<Integer>();
-        ArrayList<Integer> Ncutted = new ArrayList<Integer>();
+        ArrayList<Integer> Ncut = new ArrayList<Integer>();
         Runtime rt = Runtime.getRuntime();
         int mb = 1024 * 1024;
 
@@ -109,7 +107,6 @@ public class Corrector {
         if (toPrintStat) {
             File f = new File(ds.file_name);
             ds.PrintReadsStat("Statistics_" + f.getName());
-//                    ds.printErrorsStat("Statistics_" + ds.file_name);
         }
         nErrors.add(ds.getNerrors());
         maxReadsLen.add(ds.maxReadLen());
@@ -129,7 +126,7 @@ public class Corrector {
         int ito = (int) (rt.totalMemory() / mb);
         int ifr = (int) (rt.freeMemory() / mb);
         usedmemory.add(ito - ifr);
-        Ncutted.add(0);
+        Ncut.add(0);
         int i;
 
         if (!toClust) {
@@ -244,9 +241,7 @@ public class Corrector {
 
             }
         } else {
-//                        String refr = "GCATGGGATATGATGATGAACTGGAGTCCAACGACCACCTTACTCCTCGCCCAGGTTATGAGGATCCCAGGTACTCTGGTAGATTTACTCGCTGGAGGCCACTGGGGTGTCCTCGTGGGAGTGGCCTATTTCAGTATGCAAGCCAACTGGGCCAAAGTCATCTTGGTCCTATTCCTTTTTGCAGGGGTTGACGCCAAGACCACCACAACTGGGTCTGCGGCGGCCAGGGGAGTCAGCCGCGTCACTGGGTTCTTTGCCCCCGGGCCTAGCCAAAACTTGCAGCTCATTAACACCAACGGGAGCTGGCA";
-//                        int d = findClosest(refr,15,6.6);
-//                        System.out.println();
+
 
             for (int j = 0; j < nIter; j++) {
 
@@ -281,7 +276,7 @@ public class Corrector {
                 ito = (int) (rt.totalMemory() / mb);
                 ifr = (int) (rt.freeMemory() / mb);
                 usedmemory.add(ito - ifr);
-                Ncutted.add(ncut);
+                Ncut.add(ncut);
                 if (ds.getNreads() < minNReads) {
                     break;
                 }
@@ -379,19 +374,11 @@ public class Corrector {
             }
         }
 
-
-//		ds.PrintReadsStat("Statistics_after_" + ds.file_name);
-//		ds.printErrorsStat("Statistics_after_" + ds.file_name);
-
-
         if ((toRemoveAllUncorrect) && (ds.getNreads() > minNReads)) {
             deleteWholeUncorrectible();
         }
 
         ds = new DataSet(ds);
-
-//                String refr = "GCATGGGATATGATGATGAACTGGAGTCCAACGACCACCTTACTCCTCGCCCAGGTTATGAGGATCCCAGGTACTCTGGTAGATTTACTCGCTGGAGGCCACTGGGGTGTCCTCGTGGGAGTGGCCTATTTCAGTATGCAAGCCAACTGGGCCAAAGTCATCTTGGTCCTATTCCTTTTTGCAGGGGTTGACGCCAAGACCACCACAACTGGGTCTGCGGCGGCCAGGGGAGTCAGCCGCGTCACTGGGTTCTTTGCCCCCGGGCCTAGCCAAAACTTGCAGCTCATTAACACCAACGGGAGCTGGCA";
-//                int d = findClosest(refr,15,6.6);
 
         System.gc();
         calculations();
@@ -422,14 +409,12 @@ public class Corrector {
         System.out.println("NReads: " + NReads);
         System.out.println("NUnReads: " + NUnReads);
         System.out.println("NUnBadReads: " + NUnBadReads);
-        System.out.println("NCutted: " + Ncutted);
+        System.out.println("NCut: " + Ncut);
 
         if (toFindHapl) {
             ds.findHaplotypes();
         }
         System.out.println("Haplotypes: " + ds.haplotypes.size());
-
-        //               d = findClosestHapl(refr,15,6.6);
 
         FileWriter fw = new FileWriter(ds.file_name + "_log.txt");
         fw.write("Thresholds: " + thresholds + "\n");
@@ -445,7 +430,7 @@ public class Corrector {
         fw.write("AllKmersSizes: " + allkmerssizes + "\n");
         fw.write("KmersSizes: " + kmerssizes + "\n");
         fw.write("UsedMemory: " + usedmemory + "\n");
-        fw.write("NCutted: " + Ncutted + "\n");
+        fw.write("NCut: " + Ncut + "\n");
         fw.close();
     }
 
@@ -693,7 +678,7 @@ public class Corrector {
                 }
             }
         }
-        System.out.println("Tails cutted: " + count);
+        System.out.println("Tails cut: " + count);
         return count;
     }
 
