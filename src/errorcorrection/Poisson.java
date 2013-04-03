@@ -33,7 +33,7 @@ public class Poisson {
      * @param k 
      *      integer number (k>=0)
      * @param lambda
-     *      distribution parameter (lambda == E(X) == Variance(X), lambda > 0)
+     *      distribution parameter (lambda == E(X) == Varience(X), lambda > 0)
      * @return
      *      probability P(X<=k) == (lambda^k / k!)*e^(-lambda)
      * @throws Exception 

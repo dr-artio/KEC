@@ -1,5 +1,7 @@
 package errorcorrection;
 
+import static errorcorrection.ErrorCorrection.*;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -7,6 +9,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -42,7 +45,8 @@ public class Corrector {
         minNReads = 1000;
     }
 
-    public Corrector() { }
+    public Corrector() {
+    }
 
     void setNIter(int j) {
         nIter = j;
@@ -97,16 +101,17 @@ public class Corrector {
         ArrayList<Integer> kmerssizes = new ArrayList<Integer>();
         ArrayList<Integer> allkmerssizes = new ArrayList<Integer>();
         ArrayList<Integer> usedmemory = new ArrayList<Integer>();
-        ArrayList<Integer> Ncut = new ArrayList<Integer>();
+        ArrayList<Integer> Ncutted = new ArrayList<Integer>();
         Runtime rt = Runtime.getRuntime();
         int mb = 1024 * 1024;
 
 
-        ds.deleteStrangeNucl();
+//        ds.deleteStrangeNucl();
         calculations();
         if (toPrintStat) {
             File f = new File(ds.file_name);
             ds.PrintReadsStat("Statistics_" + f.getName());
+//                    ds.printErrorsStat("Statistics_" + ds.file_name);
         }
         nErrors.add(ds.getNerrors());
         maxReadsLen.add(ds.maxReadLen());
@@ -126,7 +131,7 @@ public class Corrector {
         int ito = (int) (rt.totalMemory() / mb);
         int ifr = (int) (rt.freeMemory() / mb);
         usedmemory.add(ito - ifr);
-        Ncut.add(0);
+        Ncutted.add(0);
         int i;
 
         if (!toClust) {
@@ -241,7 +246,9 @@ public class Corrector {
 
             }
         } else {
-
+//                        String refr = "GCATGGGATATGATGATGAACTGGAGTCCAACGACCACCTTACTCCTCGCCCAGGTTATGAGGATCCCAGGTACTCTGGTAGATTTACTCGCTGGAGGCCACTGGGGTGTCCTCGTGGGAGTGGCCTATTTCAGTATGCAAGCCAACTGGGCCAAAGTCATCTTGGTCCTATTCCTTTTTGCAGGGGTTGACGCCAAGACCACCACAACTGGGTCTGCGGCGGCCAGGGGAGTCAGCCGCGTCACTGGGTTCTTTGCCCCCGGGCCTAGCCAAAACTTGCAGCTCATTAACACCAACGGGAGCTGGCA";
+//                        int d = findClosest(refr,15,6.6);
+//                        System.out.println();
 
             for (int j = 0; j < nIter; j++) {
 
@@ -276,7 +283,7 @@ public class Corrector {
                 ito = (int) (rt.totalMemory() / mb);
                 ifr = (int) (rt.freeMemory() / mb);
                 usedmemory.add(ito - ifr);
-                Ncut.add(ncut);
+                Ncutted.add(ncut);
                 if (ds.getNreads() < minNReads) {
                     break;
                 }
@@ -374,11 +381,19 @@ public class Corrector {
             }
         }
 
+
+//		ds.PrintReadsStat("Statistics_after_" + ds.file_name);
+//		ds.printErrorsStat("Statistics_after_" + ds.file_name);
+
+
         if ((toRemoveAllUncorrect) && (ds.getNreads() > minNReads)) {
             deleteWholeUncorrectible();
         }
 
         ds = new DataSet(ds);
+
+//                String refr = "GCATGGGATATGATGATGAACTGGAGTCCAACGACCACCTTACTCCTCGCCCAGGTTATGAGGATCCCAGGTACTCTGGTAGATTTACTCGCTGGAGGCCACTGGGGTGTCCTCGTGGGAGTGGCCTATTTCAGTATGCAAGCCAACTGGGCCAAAGTCATCTTGGTCCTATTCCTTTTTGCAGGGGTTGACGCCAAGACCACCACAACTGGGTCTGCGGCGGCCAGGGGAGTCAGCCGCGTCACTGGGTTCTTTGCCCCCGGGCCTAGCCAAAACTTGCAGCTCATTAACACCAACGGGAGCTGGCA";
+//                int d = findClosest(refr,15,6.6);
 
         System.gc();
         calculations();
@@ -409,12 +424,14 @@ public class Corrector {
         System.out.println("NReads: " + NReads);
         System.out.println("NUnReads: " + NUnReads);
         System.out.println("NUnBadReads: " + NUnBadReads);
-        System.out.println("NCut: " + Ncut);
+        System.out.println("NCutted: " + Ncutted);
 
         if (toFindHapl) {
             ds.findHaplotypes();
         }
         System.out.println("Haplotypes: " + ds.haplotypes.size());
+
+        //               d = findClosestHapl(refr,15,6.6);
 
         FileWriter fw = new FileWriter(ds.file_name + "_log.txt");
         fw.write("Thresholds: " + thresholds + "\n");
@@ -430,7 +447,7 @@ public class Corrector {
         fw.write("AllKmersSizes: " + allkmerssizes + "\n");
         fw.write("KmersSizes: " + kmerssizes + "\n");
         fw.write("UsedMemory: " + usedmemory + "\n");
-        fw.write("NCut: " + Ncut + "\n");
+        fw.write("NCutted: " + Ncutted + "\n");
         fw.close();
     }
 
@@ -678,7 +695,7 @@ public class Corrector {
                 }
             }
         }
-        System.out.println("Tails cut: " + count);
+        System.out.println("Tails cutted: " + count);
         return count;
     }
 
@@ -953,6 +970,197 @@ public class Corrector {
         corhap.PrintHaplotypesWithNameTag(addr + "_postprocessed.fas", tag);
 //              corhap.PrintHaplotypes(addr+"_postprocessed.fas");
     }
+    
+    
+ void postprocessHaplotypes(String addr, double gapop, double gapext, int dominparampostpr, String idAlignAlg) throws IOException, InterruptedException
+        {
+                File fl = new File(addr);
+                if (!fl.exists())
+                {
+                    System.out.println("No such file!");
+                    return;
+                }
+                if ((ds!=null)&&(ds.haplotypes.size() == 1))
+                {
+                    System.out.println("No postprocessing needed");
+                    File f1 = new File(addr);
+                    File f2 = new File(addr + "_postprocessed.fas");
+                    f1.renameTo(f2);
+                    return;
+                }
+                DataSet dats = new DataSet(addr);
+                if (dats.getNreads() == 1)
+                {
+                    System.out.println("No postprocessing needed");
+                    return;
+                }
+
+                System.out.println("Postprocessing haplotypes \n");
+
+                if (idAlignAlg.equalsIgnoreCase(CLUSATL))
+                {
+                    Runtime run=Runtime.getRuntime();
+                    Process p=null;
+
+                    String[] s = new String[]{"ClustalW2" + File.separator +"clustalw2",
+                "-INFILE=" + addr, 
+                "-OUTFILE=" + addr + "_allign.fas",
+        "-OUTPUT=FASTA", "-DNAMATRIX=IUB", "-GAPOPEN=" + gapop, 
+                "-GAPEXT=" + gapext, "-TYPE=DNA", "-PWDNAMATRIX=IUB", 
+                "-PWGAPOPEN=" + gapop, "-PWGAPEXT=" + gapext};
+
+                     p = run.exec(s, null, ErrorCorrection.env_path);
+
+                    BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+                    System.out.println("Here is the standard output of the command:\n");
+		    String ss;
+                    while ((ss = stdInput.readLine()) != null) {
+                        DynamicOut.printStep(ss);
+                    }
+		    p.waitFor();
+                    if (p.exitValue()!= 0)
+                    {
+                        System.err.println("Error in allgnment program");
+                    }
+		    DynamicOut.finishSteps();
+        	    stdInput.close();
+                }
+                
+                if (idAlignAlg.equalsIgnoreCase(MUSCLE))
+                {
+                    String[] s = new String[] {"Muscle" + File.separator + "muscle", "-in", addr, "-out", 
+addr+"_allign.fas"};
+                    
+                    ProcessBuilder pb = new ProcessBuilder(s);
+                    pb.redirectErrorStream(true);
+                    Process proc = pb.start();
+
+                    BufferedReader stdInput = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+                    
+/*                    InputStream is = proc.getInputStream();
+                    InputStreamReader isr = new InputStreamReader(is);
+                    BufferedReader br = new BufferedReader(isr);*/
+
+
+                    String ss;
+                    System.out.println("Here is the standard output of the command:\n");
+                    while ((ss = stdInput.readLine()) != null) {
+                        DynamicOut.printStep(ss);
+                    }
+                    if (proc.exitValue()!= 0)
+                    {
+                        System.err.println("Error in allgnment program");
+                    }
+		    DynamicOut.finishSteps();
+                    stdInput.close();
+                }
+                
+                DataSet hap = new DataSet(addr+"_allign.fas",'c');
+
+                int len = 0;
+                for (Read r : hap.reads)
+                {
+                    StringTokenizer st = new StringTokenizer(r.name,"|");
+                    st.nextToken();
+                    double d = 10000*Double.parseDouble(st.nextToken());
+                    r.frequency = (int) d;
+                    len = r.getLength();
+                }
+                for (int i = 0; i < len; i++)
+                {
+                    HashMap<Character,Integer> hm = new HashMap<Character,Integer>();
+                    int count = 0;
+                    for (Read r : hap.reads)
+                    {
+                        char c = r.getNucl(i);
+                        if (hm.containsKey(c))
+                            hm.put(c, hm.get(c) + r.frequency);
+                        else
+                        {
+                            hm.put(c, r.frequency);
+                            count++;
+                        }
+                    }
+                    if ((count == 1)&&(hm.containsKey('-')))
+                        for (Read r : hap.reads)
+                            r.corrections[i] = new Correction('D');
+                    if (count != 2)
+                        continue;
+                    if (hm.containsKey('-'))
+                    {
+                        char nongap = 'z';
+                        int nongap_fr = 0;
+                        int gap_fr = 0;
+                        Iterator ir = hm.entrySet().iterator();
+                        while (ir.hasNext())
+                        {
+                            Map.Entry me = (Map.Entry) ir.next();
+                            if ((Character) me.getKey() == '-')
+                                gap_fr = (Integer) me.getValue();
+                            else
+                            {
+                                nongap_fr = (Integer) me.getValue();
+                                nongap = (Character) me.getKey();
+                            }
+                        }
+                        boolean homopError = true;
+                        for (Read r : hap.reads)
+                        {
+                            if (i == 0)
+                            {
+                                homopError = false;
+                                break;
+                            }
+                            if (r.getNucl(i-1) != nongap)
+                            {
+                                if (r.getNucl(i-1) != '-')
+                                {
+                                    homopError = false;
+                                    break;
+                                }
+                            }
+                        }
+                        if (homopError)
+                        {
+                            if (gap_fr > dominparampostpr * nongap_fr)
+                                for (Read r : hap.reads)
+                                    r.corrections[i] = new Correction('D');
+                            if (gap_fr * dominparampostpr <= nongap_fr)
+                                for (Read r : hap.reads)
+                                    r.corrections[i] = new Correction('R',nongap);
+                        }
+                        else
+                        {
+                            if (i == len -1)
+                                continue;
+                             homopError = true;
+                             for (Read r : hap.reads)
+                                if (r.getNucl(i+1) != nongap)
+                                {
+                                    homopError = false;
+                                    break;
+                                }
+                             if (homopError)
+                             {
+                                if (gap_fr > nongap_fr * dominparampostpr)
+                                    for (Read r : hap.reads)
+                                        r.corrections[i] = new Correction('D');
+                                if (gap_fr * dominparampostpr <= nongap_fr)
+                                    for (Read r : hap.reads)
+                                        r.corrections[i] = new Correction('R',nongap);
+                            }
+                        }
+                    }
+
+                }
+              DataSet corhap = new DataSet(hap);
+              corhap.findHaplotypes();
+              StringTokenizer st1 = new StringTokenizer(addr,"_");
+              String tag = st1.nextToken();
+              corhap.PrintHaplotypesWithNameTag(addr+"_postprocessed.fas", tag);
+//              corhap.PrintHaplotypes(addr+"_postprocessed.fas");
+        }
 
     void postprocessHaplotypesSHORAH(String addr) throws IOException, InterruptedException {
         System.out.println("Postprocessing haplotypes \n");
@@ -1616,6 +1824,587 @@ public class Corrector {
          corhap.PrintHaplotypes(addr+"_postprocessedPairwise.fas");
          System.out.println("Postprocessing finished!");*/
     }
+    
+    public void postprocessHaplotypesPairwise(String addr, double gapop, double gapext, int dominparamonenucl, int dominparamgen, int nucldiffparam, String idAlignAlg) throws IOException, InterruptedException
+       {
+           int dominparamgenins = 100;
+           String pref = fl.getParent() + File.separator;
+            File fl = new File(addr);
+                if (!fl.exists())
+                {
+                    System.out.println("No such file!");
+                    return;
+                }
+            DataSet hap = new DataSet(addr,'c');
+            if (hap.reads.size() == 1)
+            {
+                File f1 = new File(addr);
+                File f2 = new File(addr + "_PostprocPair.fas");
+                f1.renameTo(f2);
+                return;
+            }
+
+            int niterpostp = 20;
+            for (int iter = 0; iter < niterpostp; iter++)
+            {
+                System.out.println("Postprocessing haplotypes pairwise \n");
+                Runtime run=Runtime.getRuntime();
+                Process p=null;
+                
+                FileReader ftree = null;
+                if (idAlignAlg.equalsIgnoreCase(CLUSATL))
+                {
+                    String[] s = new String[]{"ClustalW2" + File.separator +"clustalw2",
+                "-INFILE=" + addr,
+                "-OUTFILE=" + addr +"_allign.fas",
+            "-OUTPUT=FASTA", "-DNAMATRIX=IUB", "-GAPOPEN=" + gapop, 
+            "-GAPEXT=" + gapext, "-TYPE=DNA",
+                    "-PWDNAMATRIX=IUB", "-PWGAPOPEN=" + gapop,
+                    "-PWGAPEXT=" + gapext};
+
+                    p = run.exec(s, null, ErrorCorrection.env_path);
+                    BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+                    System.out.println("Here is the standard output of the command:\n");
+		    String ss;
+                    while ((ss = stdInput.readLine()) != null) {
+                        DynamicOut.printStep(ss);
+                    }
+                    p.waitFor();
+                    if (p.exitValue()!= 0)
+                    {
+                        System.err.println("Error in allgnment program");
+                    }
+		    DynamicOut.finishSteps();
+            	    stdInput.close();
+                    int i = addr.length() - 1;
+                    while(addr.charAt(i) != '.')
+                        i--;
+                    ftree = new FileReader(addr.substring(0, i) + ".dnd");
+                }
+                
+                if (idAlignAlg.equalsIgnoreCase(MUSCLE))
+                {
+                    
+                    String[] s = new String[] {"Muscle" + File.separator + "muscle", "-in", addr, "-out", addr+"_allign.fas","-tree2", "tree.phy"};
+                    
+                    ProcessBuilder pb = new ProcessBuilder(s);
+                    pb.redirectErrorStream(true);
+                    Process proc = pb.start();
+
+                    BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+
+                    String ss;
+                    System.out.println("Here is the standard output of the command:\n");
+                    while ((ss = stdInput.readLine()) != null) {
+                        DynamicOut.printStep(ss);
+                    }
+                    if (proc.exitValue()!= 0)
+                    {
+                        System.err.println("Error in allgnment program");
+                    }
+		    DynamicOut.finishSteps();
+            	    stdInput.close();
+                    ftree = new FileReader("tree.phy");
+                }
+                
+                BufferedReader brtree = new BufferedReader(ftree);
+                for (Read r : hap.reads)
+                {
+                    StringTokenizer st = new StringTokenizer(r.name,"|");
+                    st.nextToken();
+                    double d = 10000*Double.parseDouble(st.nextToken());
+                    r.frequency = (int) d;
+                }
+                String s = brtree.readLine();
+                String treestr = "";
+                while (s!= null)
+                {
+                    treestr += s;
+                    s = brtree.readLine();
+                }
+                brtree.close();
+                HashSet<ArrayList<Read>> closepairs = new HashSet<ArrayList<Read>>();
+                Stack<Character> st = new Stack<Character>();
+                for (int i = 0; i < treestr.length(); i++)
+                {
+                    st.push(treestr.charAt(i));
+                    if (treestr.charAt(i) == ')')
+                    {
+                        String betw = "";
+                        char c = ' ';
+                        while (c != '(')
+                        {
+                            c = st.pop();
+                            betw = c + betw;
+                        }
+                        ArrayList<String> readsbetw = new ArrayList<String>();
+                        StringTokenizer stbetw = new StringTokenizer(betw,"()_,");
+                        while (stbetw.hasMoreTokens())
+                        {
+                            String s1 = stbetw.nextToken();
+                            if (s1.startsWith("read"))
+                                readsbetw.add(s1);
+                        }
+                        if (readsbetw.size() == 2)
+                        {
+                            ArrayList<Read> pair = new ArrayList<Read>();
+                            for (Read r : hap.reads)
+                            {
+                                StringTokenizer stk = new StringTokenizer(r.name,"_");
+                                String stnm = stk.nextToken();
+                                if (stnm.equalsIgnoreCase(readsbetw.get(0)))
+                                {
+                                    pair.add(r);
+                                    break;
+                                }
+                            }
+                            for (Read r : hap.reads)
+                            {
+                                StringTokenizer stk = new StringTokenizer(r.name,"_");
+                                String stnm = stk.nextToken();
+                                if (stnm.equalsIgnoreCase(readsbetw.get(1)))
+                                {
+                                    pair.add(r);
+                                    break;
+                                }
+                            }
+                            closepairs.add(pair);
+                        }
+                        if (readsbetw.size() > 2)
+                        {
+                            ArrayList<ArrayList<Read>> possibpairs = new ArrayList<ArrayList<Read>>();
+                            for (int u = 0; u < readsbetw.size(); u++)
+                                for (int v = u + 1; v < readsbetw.size(); v++)
+                                {
+                                    ArrayList<Read> pospair = new ArrayList<Read>();
+                                    for (Read r : hap.reads)
+                                    {
+                                        StringTokenizer stk = new StringTokenizer(r.name,"_");
+                                        String stnm = stk.nextToken();
+                                        if (stnm.equalsIgnoreCase(readsbetw.get(u)))
+                                        {
+                                            pospair.add(r);
+                                            break;
+                                        }
+                                    }
+                                    for (Read r : hap.reads)
+                                    {
+                                        StringTokenizer stk = new StringTokenizer(r.name,"_");
+                                        String stnm = stk.nextToken();
+                                        if (stnm.equalsIgnoreCase(readsbetw.get(v)))
+                                        {
+                                            pospair.add(r);
+                                            break;
+                                        }
+                                    }
+                                    possibpairs.add(pospair);
+                                }
+                            ArrayList<Read> optpair = new ArrayList<Read>();
+                            int optnucldiff = Integer.MAX_VALUE;
+                            int opthomopdiff = Integer.MAX_VALUE;
+                            double optdominparam = Double.MAX_VALUE;
+                            for (ArrayList<Read> ar : possibpairs)
+                            {
+                                FileWriter fw_alin = new FileWriter("allign_input.fas");
+                                fw_alin.write(">" + ar.get(0).name + "\n" + ar.get(0).nucl + "\n");
+                                fw_alin.write(">" + ar.get(1).name + "\n" + ar.get(1).nucl + "\n");
+                                fw_alin.close();
+                                
+                                if (idAlignAlg.equalsIgnoreCase("Clustal"))
+                                {
+                                            String[] param = new String[]{"ClustalW2" + File.separator +"clustalw2",
+                                       "-INFILE=" + pref + "allign_input.fas",  
+                                       "-OUTFILE=" + pref + "allign_output.fas",
+                                    "-OUTPUT=FASTA", "-DNAMATRIX=IUB", "-GAPOPEN=" + gapop, 
+                                            "-GAPEXT=" + gapext, "-TYPE=DNA", "-PWDNAMATRIX=IUB",
+                                            "-PWGAPOPEN=" + gapop, " -PWGAPEXT=" + gapext};
+                                    p = run.exec(param, null, ErrorCorrection.env_path);
+                                    BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+                                    String ss;
+                                    while ((ss = stdInput.readLine()) != null) {
+                                        DynamicOut.printStep(ss);
+                                    }
+                                    p.waitFor();
+                                    if (p.exitValue() != 0) {
+                                        System.err.println("Error in allgnment program");
+                                    }
+                                    DynamicOut.finishSteps();
+                                    stdInput.close();
+                                }
+
+                                if (idAlignAlg.equalsIgnoreCase("Muscle"))
+                                {
+
+                                    String[] param = new String[] {"Muscle" + File.separator + "muscle", "-in", "allign_input.fas", "-out", "allign_output.fas"};
+
+                                    ProcessBuilder pb = new ProcessBuilder(s);
+                                    pb.redirectErrorStream(true);
+                                    Process proc = pb.start();
+
+                                    BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+
+                                    String ss;
+                                    System.out.println("Here is the standard output of the command:\n");
+                                    while ((ss = stdInput.readLine()) != null) {
+                                        DynamicOut.printStep(ss);
+                                    }
+                                    if (proc.exitValue()!= 0)
+                                    {
+                                        System.err.println("Error in allgnment program");
+                                    }
+                                    DynamicOut.finishSteps();
+                                    stdInput.close();
+                                }                                         
+                            
+                            
+                                DataSet alignment = new DataSet("allign_output.fas",'c');
+                                File f = new File("allign_input.fas");
+                                f.delete();
+                                f = new File("allign_output.fas");
+                                f.delete();
+                                f = new File("allign_input.dnd");
+                                f.delete();
+                                String fir = alignment.reads.get(0).getNucl();
+                                String sec = alignment.reads.get(1).getNucl();
+                                int startcompdiff = 0;
+                                int endcompdiff = fir.length()-1;
+                                String sz = "";
+                                if (fir.charAt(0) == '-')
+                                    sz = fir;
+                                else
+                                    sz = sec;
+                                while (sz.charAt(startcompdiff) == '-')
+                                    startcompdiff++;
+                                if (fir.charAt(fir.length()-1) == '-')
+                                    sz = fir;
+                                else
+                                    sz = sec;
+                                while (sz.charAt(endcompdiff) == '-')
+                                    endcompdiff--;
+                                int diff = 0;
+                                int homopdiff = 0;
+                                for (i = startcompdiff; i <= endcompdiff; i++)
+                                    if (fir.charAt(i)!= sec.charAt(i))
+                                        diff++;
+                                if (diff < optnucldiff)
+                                {
+                                    optnucldiff = diff;
+                                    optpair = ar;
+                                }
+                            }
+                            closepairs.add(optpair);
+                        }
+                    }
+                }
+                for (ArrayList<Read> ar : closepairs)
+                {
+                    System.out.println(ar.get(0).name);
+                    System.out.println(ar.get(1).name);
+                    System.out.println();
+                }
+                boolean correction = false;
+                for (ArrayList<Read> ar : closepairs)
+                {                    
+                    Read large = null;
+                    Read small = null;
+                    if (ar.get(0).frequency >= ar.get(1).frequency)
+                    {
+                        large = ar.get(0);
+                        small = ar.get(1);
+                    }
+                    else
+                    {
+                        large = ar.get(1);
+                        small = ar.get(0);
+                    }
+//                    if (large.frequency < small.frequency * dominparam)
+//                        continue;
+
+                    run=Runtime.getRuntime();
+                    p=null;
+                    FileWriter fw_alin = new FileWriter("allign_input.fas");
+                    fw_alin.write(">" + large.name + "\n" + large.nucl + "\n");
+                    fw_alin.write(">" + small.name + "\n" + small.nucl + "\n");
+                    fw_alin.close();
+                    
+                    
+                    if (idAlignAlg.equalsIgnoreCase("Clustal"))
+                                {
+                                            String[] param = new String[]{"ClustalW2" + File.separator +"clustalw2",
+                                       "-INFILE=" + pref + "allign_input.fas",  
+                                       "-OUTFILE=" + pref + "allign_output.fas",
+                                    "-OUTPUT=FASTA", "-DNAMATRIX=IUB", "-GAPOPEN=" + gapop, 
+                                            "-GAPEXT=" + gapext, "-TYPE=DNA", "-PWDNAMATRIX=IUB",
+                                            "-PWGAPOPEN=" + gapop, " -PWGAPEXT=" + gapext};
+                                    p = run.exec(param, null, ErrorCorrection.env_path);
+                                    BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+                                    String ss;
+                                    while ((ss = stdInput.readLine()) != null) {
+                                        DynamicOut.printStep(ss);
+                                    }
+                                    p.waitFor();
+                                    if (p.exitValue() != 0) {
+                                        System.err.println("Error in allgnment program");
+                                    }
+                                    DynamicOut.finishSteps();
+                                    stdInput.close();
+                                }
+
+                                if (idAlignAlg.equalsIgnoreCase("Muscle"))
+                                {
+
+                                    String[] param = new String[] {"Muscle" + File.separator + "muscle", "-in", "allign_input.fas", "-out", "allign_output.fas"};
+
+                                    ProcessBuilder pb = new ProcessBuilder(s);
+                                    pb.redirectErrorStream(true);
+                                    Process proc = pb.start();
+
+                                    BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+
+                                    String ss;
+                                    System.out.println("Here is the standard output of the command:\n");
+                                    while ((ss = stdInput.readLine()) != null) {
+                                        DynamicOut.printStep(ss);
+                                    }
+                                    if (proc.exitValue()!= 0)
+                                    {
+                                        System.err.println("Error in allgnment program");
+                                    }
+                                    DynamicOut.finishSteps();
+                                    stdInput.close();
+                                }                                      
+                    
+                    
+                    DataSet alignment = new DataSet("allign_output.fas",'c');
+                    File f = new File("allign_input.fas");
+                    f.delete();
+                    f = new File("allign_output.fas");
+                    f.delete();
+                    f = new File("allign_input.dnd");
+                    f.delete();
+                    String large_align = "";
+                    String small_align = "";
+                    for (Read r: alignment.reads)
+                    {
+                        if (r.name.equalsIgnoreCase(large.name))
+                            large_align = r.nucl;
+                        if (r.name.equalsIgnoreCase(small.name))
+                            small_align = r.nucl;
+                    }
+                    int l = large_align.length();
+                    int large_pos = -1;
+                    int small_pos = -1;
+
+                    int startcompdiff = 0;
+                    int endcompdiff = l-1;
+                    String sz = "";
+                    if (large_align.charAt(0) == '-')
+                        sz = large_align;
+                    else
+                        sz = small_align;
+                    while (sz.charAt(startcompdiff) == '-')
+                        startcompdiff++;
+                    if (large_align.charAt(l-1) == '-')
+                        sz = large_align;
+                    else
+                        sz = small_align;
+                    while (sz.charAt(endcompdiff) == '-')
+                        endcompdiff--;
+
+                    int diff = 0;
+                    for (int i = startcompdiff; i <= endcompdiff; i++)
+                        if (large_align.charAt(i)!= small_align.charAt(i))
+                            diff++;
+
+                    if (diff <= nucldiffparam)
+                    {
+                        boolean corrhomop = false;
+                        for (int i = 0; i < startcompdiff; i++)
+                        {
+                            if (large_align.charAt(i)!='-')
+                                large_pos++;
+                            if (small_align.charAt(i)!='-')
+                                small_pos++;
+                        }
+                        for (int i = startcompdiff; i <= endcompdiff; i++)
+                        {
+                            if (large_align.charAt(i)!='-')
+                                large_pos++;
+                            if (small_align.charAt(i)!='-')
+                                small_pos++;
+                            if (small_pos == -1)
+                                continue;
+                            if ((large_align.charAt(i) == '-')&&(small_align.charAt(i)!= '-'))
+                            {
+                                if ((i > 0)&&(large_align.charAt(i-1) == small_align.charAt(i-1))&&(small_align.charAt(i-1) == small_align.charAt(i)))
+                                {
+                                    small.corrections[small_pos] = new Correction('D');
+                                    corrhomop = true;
+                                    correction = true;
+                                }
+                                if ((i < l-1)&&(large_align.charAt(i+1) == small_align.charAt(i+1))&&(small_align.charAt(i+1) == small_align.charAt(i)))
+                                {
+                                    small.corrections[small_pos] = new Correction('D');
+                                    corrhomop = true;
+                                    correction = true;
+                                }
+                            }
+                            if ((large_align.charAt(i) != '-')&&(small_align.charAt(i)== '-'))
+                            {
+                                if ((i > 0)&&(large_align.charAt(i-1) == small_align.charAt(i-1))&&(large_align.charAt(i-1) == large_align.charAt(i)))
+                                {
+                                    small.corrections[small_pos] = new Correction('I',large_align.charAt(i));
+                                    corrhomop = true;
+                                    correction = true;
+                                }
+                                if ((i < l-1)&&(large_align.charAt(i+1) == small_align.charAt(i+1))&&(large_align.charAt(i+1) == large_align.charAt(i)))
+                                {
+                                    small.corrections[small_pos] = new Correction('I',large_align.charAt(i));
+                                    corrhomop = true;
+                                    correction = true;
+                                }
+                            }
+                         }
+                        if (corrhomop)
+                            continue;
+                        large_pos = -1;
+                        small_pos = -1;
+                        if (large.frequency >= small.frequency * dominparamonenucl)
+                        {
+                            for (int i = 0; i < startcompdiff; i++)
+                            {
+                                if (large_align.charAt(i)!='-')
+                                    large_pos++;
+                                if (small_align.charAt(i)!='-')
+                                    small_pos++;
+                            }
+                            for (int i = startcompdiff; i <= endcompdiff; i++)
+                            {
+                                if (large_align.charAt(i)!='-')
+                                    large_pos++;
+                                if (small_align.charAt(i)!='-')
+                                    small_pos++;
+                                if (small_pos == -1)
+                                    continue;
+                                if ((large_align.charAt(i) == '-')&&(small_align.charAt(i)!= '-'))
+                                {
+                                    small.corrections[small_pos] = new Correction('D');
+                                    correction = true;
+                                }
+                                if ((large_align.charAt(i) != '-')&&(small_align.charAt(i)== '-'))
+                                {
+                                    small.corrections[small_pos] = new Correction('I',large_align.charAt(i));
+                                    correction = true;
+                                }
+                             }
+                        }
+                        continue;
+                     }
+
+                    if (large.frequency < small.frequency * dominparamgen)
+                        continue;
+                    boolean correctionthispair = false;
+                    for (int i = 0; i < l; i++)
+                    {
+                        if (large_align.charAt(i)!='-')
+                            large_pos++;
+                        if (small_align.charAt(i)!='-')
+                            small_pos++;
+                        if (small_pos == -1)
+                            continue;
+                        if ((large_align.charAt(i) == '-')&&(small_align.charAt(i)!= '-'))
+                        {
+                            if ((i > 0)&&(large_align.charAt(i-1) == small_align.charAt(i-1))&&(small_align.charAt(i-1) == small_align.charAt(i)))
+                            {
+                                small.corrections[small_pos] = new Correction('D');
+                                correction = true;
+                                correctionthispair = true;
+                            }
+                            if ((i < l-1)&&(large_align.charAt(i+1) == small_align.charAt(i+1))&&(small_align.charAt(i+1) == small_align.charAt(i)))
+                            {
+                                small.corrections[small_pos] = new Correction('D');
+                                correction = true;
+                                correctionthispair = true;
+                            }
+                        }
+                        if ((large_align.charAt(i) != '-')&&(small_align.charAt(i)== '-'))
+                        {
+                            if ((i > 0)&&(large_align.charAt(i-1) == small_align.charAt(i-1))&&(large_align.charAt(i-1) == large_align.charAt(i)))
+                            {
+                                small.corrections[small_pos] = new Correction('I',large_align.charAt(i));
+                                correction = true;
+                                correctionthispair = true;
+                            }
+                            if ((i < l-1)&&(large_align.charAt(i+1) == small_align.charAt(i+1))&&(large_align.charAt(i+1) == large_align.charAt(i)))
+                            {
+                                small.corrections[small_pos] = new Correction('I',large_align.charAt(i));
+                                correction = true;
+                                correctionthispair = true;
+                            }
+                        }
+                     }
+                    if (correctionthispair)
+                        continue;
+                    int inddiff = 0;
+                    for (int i = startcompdiff; i <= endcompdiff; i++)
+                        if (large_align.charAt(i)!= small_align.charAt(i))
+                            if ((large_align.charAt(i)=='-')||(small_align.charAt(i)=='-'))
+                                inddiff++;
+                    if ((inddiff == diff)&&(large.frequency > small.frequency * dominparamgenins))
+                    {
+                        large_pos = -1;
+                        small_pos = -1;
+                        for (int i = 0; i < l; i++)
+                        {
+                            if (large_align.charAt(i)!='-')
+                                large_pos++;
+                            if (small_align.charAt(i)!='-')
+                                small_pos++;
+                            if (small_pos == -1)
+                                continue;
+                            if ((large_align.charAt(i) == '-')&&(small_align.charAt(i)!= '-'))
+                            {
+                                    small.corrections[small_pos] = new Correction('D');
+                                    correction = true;
+                            }
+                            if ((large_align.charAt(i) != '-')&&(small_align.charAt(i)== '-'))
+                            {
+                                    small.corrections[small_pos] = new Correction('I',large_align.charAt(i));
+                                    correction = true;
+                            }
+                         }
+                      }
+                }
+                DataSet corhap = new DataSet(hap);
+                corhap.findHaplotypes();
+                if (iter == niterpostp - 1)
+                    addr = addr + "_PostprocPair.fas";
+                StringTokenizer st1 = new StringTokenizer(addr,"_");
+                String tag = st1.nextToken();
+                corhap.PrintHaplotypesWithNameTag(addr, tag);
+//                corhap.PrintHaplotypes(addr);
+                System.out.println("");
+                hap = new DataSet(addr,'c');
+                //// ???????????????????????
+                if (((hap.reads.size() == 1)&&(iter!= niterpostp - 1))|| (!correction))
+                {
+                   File f1 = new File(addr);
+                   File f2 = new File(addr + "_PostprocPair.fas");
+                   f1.renameTo(f2);
+                   return;
+                }
+           }
+/*           DataSet corhap = new DataSet(hap);
+           corhap.findHaplotypes();
+           corhap.PrintHaplotypes(addr+"_postprocessedPairwise.fas");
+           System.out.println("Postprocessing finished!");*/
+       }
 
     void postprocessFinal(String addr) throws IOException {
         File fl = new File(addr);
@@ -2271,4 +3060,135 @@ public class Corrector {
         return min;
     }
     // </editor-fold>
+    void postprocessAlignedHaplotypesNuclSwitch(String addr, String idmethod, int homop_size) throws FileNotFoundException, IOException
+       // <editor-fold defaultstate="collapsed" desc=" DESCRIPTION ">
+       {
+           int dominparamgap = 3;
+           DataSet hapl = new DataSet(addr,idmethod);
+           int l = hapl.reads.get(0).getLength();
+           
+           for (int i = 0; i < l; i++)
+                {
+                    System.out.println("Postprocessing position " + (i+1));
+                    HashMap<Character,Integer> hm = new HashMap<Character,Integer>();
+                    int count = 0;
+                    for (Read r : hapl.reads)
+                    {
+                        char c = r.getNucl(i);
+                        if (hm.containsKey(c))
+                            hm.put(c, hm.get(c) + r.frequency);
+                        else
+                        {
+                            hm.put(c, r.frequency);
+                            count++;
+                        }
+                    }
+                    if ((count == 1)&&(hm.containsKey('-')))
+                        for (Read r : hapl.reads)
+                            r.corrections[i] = new Correction('D');
+                    
+                    int nongap_fr = 0;
+                    int gap_fr = 0;
+                    Iterator ir = hm.entrySet().iterator();
+                    while (ir.hasNext())
+                    {
+                        Map.Entry me = (Map.Entry) ir.next();
+                        if ((Character) me.getKey() == '-')
+                            gap_fr = (Integer) me.getValue();
+                        else
+                            nongap_fr = (Integer) me.getValue();
+                    }
+                    if (gap_fr < dominparamgap*nongap_fr)
+                        continue;
+                    
+                    for (Read h : hapl.reads)
+                    {
+                             // homopolymer-related swithches
+                        
+                        if (h.nucl.charAt(i) != '-')
+                        {
+                            char susp_nucl = h.nucl.charAt(i);
+                            
+                            // looking backward
+                            
+                            int j = i - 1;
+                            while ((j >= 0) && (h.nucl.charAt(j) != susp_nucl))
+                                j--;                            
+                            if (j <= 0)
+                                continue;
+                            if (j == i-1)
+                                continue;
+                            boolean inCycle = true;
+                            HashSet<Character> hs = new HashSet<Character>();
+                            String contract_homop ="" + h.nucl.charAt(j+1);
+                            for (int u = j+2; u <= i-1; u++)
+                                if (h.nucl.charAt(u) != contract_homop.charAt(contract_homop.length() - 1))
+                                    contract_homop = contract_homop + h.nucl.charAt(u);
+                            for (int u = 0; u < contract_homop.length(); u++)
+                                if (hs.contains(contract_homop.charAt(u)))
+                                {
+                                    inCycle = false;
+                                    break;
+                                }
+                                else
+                                    hs.add(contract_homop.charAt(u));
+                            if (inCycle)
+                            {
+                                hs = new HashSet<Character>();
+                                hs.add(susp_nucl);
+                                hs.add('-');
+                                int u = j;
+                                while ((u >= 0) && (hs.contains(h.nucl.charAt(u))))
+                                    u--;
+                                if (j - u >= homop_size)
+                                {
+                                    h.corrections[i] = new Correction('D');
+                                    continue;
+                                }
+                            }
+                            
+                             // looking forward
+                            
+                            j = i + 1;
+                            while ((j <= l-2) && (h.nucl.charAt(j) != susp_nucl))
+                                j++;                            
+                            if (j >= l-1)
+                                continue;
+                            if (j == i+1)
+                                continue;
+                            inCycle = true;
+                            hs = new HashSet<Character>();    
+                            contract_homop ="" + h.nucl.charAt(i+1);
+                            for (int u = i+2; u <= j-1; u++)
+                                if (h.nucl.charAt(u) != contract_homop.charAt(contract_homop.length() - 1))
+                                    contract_homop = contract_homop + h.nucl.charAt(u);
+                            for (int u = 0; u < contract_homop.length(); u++)
+                                if (hs.contains(contract_homop.charAt(u)))
+                                {
+                                    inCycle = false;
+                                    break;
+                                }
+                                else
+                                    hs.add(contract_homop.charAt(u));
+                            if (inCycle)
+                            {                                 
+                                hs = new HashSet<Character>();
+                                hs.add(susp_nucl);
+                                hs.add('-');
+                                int u = j;
+                                while ((u < l) && (hs.contains(h.nucl.charAt(u))))
+                                    u++;
+                                if (u - j >= homop_size)
+                                    h.corrections[i] = new Correction('D');
+                            }
+                            
+                        }
+                    }
+                }
+           
+               DataSet corhapl = new DataSet(hapl);
+               corhapl.findHaplotypes();
+               corhapl.PrintHaplotypes(addr + "_PostprocShift.fas");
+           }
+         // </editor-fold>
 }

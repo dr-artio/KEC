@@ -33,7 +33,7 @@ public class Exponent {
      * @param k 
      *      integer number (k>=0)
      * @param lambda
-     *      distribution parameter (lambda == E(X) == Variance(X), lambda > 0)
+     *      distribution parameter (lambda == E(X) == Varience(X), lambda > 0)
      * @return
      *      probability P(X<=k) == (lambda^k / k!)*e^(-lambda)
      * @throws Exception 
@@ -82,7 +82,7 @@ public class Exponent {
     }
     
     /**
-     * Set _lambda value.
+     * Set _lambsa value.
      * @param stvar
      *      ordered array (index as a value of X)
      * @param start
@@ -99,7 +99,7 @@ public class Exponent {
      }
      
      /**
-     * Set _lambda value.
+     * Set _lambsa value.
      * @param stvar
      *      ordered array (index as a value of X)
      * @param start
@@ -112,10 +112,10 @@ public class Exponent {
      }
      
      /**
-     * Give estimation of lambda for discrete stochastic variable
+     * Give estimation of lambda for discrete stohastic variable
      * and save to _lambda
      * @param stvar
-     *      Map of values of stochastic variable
+     *      Map of values of stohastic variable
      * @return 
      *      lambda (Parameter for Poisson distribution)
      */
