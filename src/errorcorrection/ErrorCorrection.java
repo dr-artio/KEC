@@ -35,7 +35,6 @@ public class ErrorCorrection {
 
         int k = 25;
         int nIter = 3;
-        int toFindHapl = 0;
         int errorsseglen = 0;
         File fl = null;
         String alignmethod = ""; // "Muscle" or "Clustal"
@@ -228,7 +227,7 @@ public class ErrorCorrection {
 
             ds.PrintCorrectedReads(dset_file_name + "_corrected.fas");
             ds.PrintHaplotypes(dset_file_name + "_haplotypes.fas");
-            if (toFindHapl == 1) {
+            if (!"".equals(alignmethod)) {
                 /*                    dominparamgen = 5;
                  dominparampostpr = 5;
                  dominparamonenucl = 5;
