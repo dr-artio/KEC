@@ -2,6 +2,10 @@ package errorcorrection;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.security.CodeSource;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import net.sourceforge.argparse4j.*;
 import net.sourceforge.argparse4j.impl.Arguments;
 import net.sourceforge.argparse4j.inf.*;
@@ -20,7 +24,13 @@ public class ErrorCorrection {
     static final String MUSCLE = "Muscle";
     static File env_path;
     static {
-        env_path = new File(".");
+        try {
+            CodeSource codeSource = ErrorCorrection.class.getProtectionDomain().getCodeSource();
+            String path = codeSource.getLocation().toURI().getPath();
+            env_path = new File(path).getParentFile();
+        } catch (URISyntaxException ex) {
+            Logger.getLogger(ErrorCorrection.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     /**
      * @param args
@@ -61,40 +71,39 @@ public class ErrorCorrection {
                 + "do not use)");
         
         parser.addArgument(READS_PARAMETER)
-                .metavar("Reads File")
-                .help("File containing raw sequencing data"
+                .metavar("ReadsFile")
+                .help("File containing reads to be corrected "
                 + " file with extension .fasta (.fas) "
                 + "reads in fasta format")
                 .type(File.class);
 
         parser.addArgument("-k").dest(K_PARAMETER)
-                .metavar("Size of k-mer")
+                .metavar("SizeOfk-mer")
                 .setDefault(k)
                 .type(Integer.class)
-                .help("Parameter k - the size of substrings (k-mers) "
+                .help("Parameter k - the size of k-mers "
                 + "Default: " + k + ")");
 
         parser.addArgument("-i").dest(I_PARAMETER)
                 .metavar("Iterations")
                 .setDefault(nIter)
                 .type(Integer.class)
-                .help("Number of iterations of cleaning"
-                + " in error correction procedure. If it is "
-                + "greater than 3 than influence is not significant "
+                .help("Number of iterations of the algorithm "
                 + "(Default: " + nIter + ")");
 
         parser.addArgument("-l").dest(L_PARAMETER)
-                .metavar("Num of zeros")
+                .metavar("NumOfZeros")
                 .setDefault(errorsseglen)
                 .type(Integer.class)
-                .help("Number of consecutef zeros for finding threshold. "
+                .help("Number of consecutive zeros for finding error threshold. "
                 + "Using Poisson distribution if 0 (Default: " + errorsseglen + ")");
 
         parser.addArgument("-dg").dest(DOMINGEN_PARAMETER)
                 .metavar("dominparamgen")
                 .setDefault(dominparamgen)
                 .type(Integer.class)
-                .help("For positions suspected on homopolymer error if "
+                .help("Parameter for haplotypes postprocessing using multiple alignment "
+                + " For positions suspected on homopolymer error if "
                 + "total sum of frequencies with gap on this position "
                 + "is [dominparamgen] times greater than without (or vice versa) "
                 + "then error will be corrected. (Default: "
@@ -105,8 +114,8 @@ public class ErrorCorrection {
                 .setDefault(dominparampostpr)
                 .type(Integer.class)
                 .help("The same as [dominparamgen] but for pairwise "
-                + "postprocessing of haplotypes with the help of "
-                + "heuristics neigbor leaves of the phylogenetic tree."
+                + "postprocessing of haplotypes using "
+                + "alignment of neigbor leaves of neighbor joining tree."
                 + "(Default: " + dominparampostpr + ")");
 
         try {
@@ -233,10 +242,10 @@ public class ErrorCorrection {
                  dominparamonenucl = 5;
                  nucldiffparam = 3;*/
                 cr.postprocessHaplotypes(dset_file_name + "_haplotypes.fas", 15, 6.6, dominparampostpr,alignmethod);
- //               cr.printRevComp(dset_file_name + "_haplotypes.fas_postprocessed.fas");
-                cr.postprocessHaplotypesPairwise(dset_file_name + "_haplotypes.fas_postprocessed.fas_RevComp.fas", 15, 6.6, dominparamonenucl, dominparamgen, nucldiffparam,alignmethod);
-                cr.postprocessHaplotypes(dset_file_name + "_haplotypes.fas_postprocessed.fas_RevComp.fas_PostprocPair.fas", 15, 6.6, dominparampostpr,alignmethod);
-                cr.postprocessHaplotypesPairwise(dset_file_name + "_haplotypes.fas_postprocessed.fas_RevComp.fas_PostprocPair.fas_postprocessed.fas", 15, 6.6, dominparamonenucl, dominparamgen, nucldiffparam,alignmethod);
+//                cr.printRevComp(dset_file_name + "_haplotypes.fas_postprocessed.fas");
+                cr.postprocessHaplotypesPairwise(dset_file_name + "_haplotypes.fas_postprocessed.fas", 15, 6.6, dominparamonenucl, dominparamgen, nucldiffparam,alignmethod);
+                cr.postprocessHaplotypes(dset_file_name + "_haplotypes.fas_postprocessed.fas_PostprocPair.fas", 15, 6.6, dominparampostpr,alignmethod);
+                cr.postprocessHaplotypesPairwise(dset_file_name + "_haplotypes.fas_postprocessed.fas_PostprocPair.fas_postprocessed.fas", 15, 6.6, dominparamonenucl, dominparamgen, nucldiffparam,alignmethod);
             }
 //		cr.printRevComp(dset_file_name +"_haplotypes.fas_postprocessed.fas");
 

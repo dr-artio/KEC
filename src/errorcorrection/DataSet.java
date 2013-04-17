@@ -632,6 +632,7 @@ public class DataSet {
             count++;
             count1++;
             DynamicOut.printStep("Clustering: read " + count + "/" + reads.size());
+//            System.out.println("Clustering: read " + count + "/" + reads.size());
             File f = new File(pref + "kmer" + count + "data.txt");
             FileWriter fw = new FileWriter(f);
 //			 fw.write(r.kmers.size() + " " + 2 + "\n");

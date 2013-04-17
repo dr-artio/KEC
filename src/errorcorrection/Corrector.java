@@ -859,7 +859,8 @@ public class Corrector {
         System.out.println("Here is the standard output of the command:\n");
         String ss;
         while ((ss = stdInput.readLine()) != null) {
-            DynamicOut.printStep(ss);
+//            DynamicOut.printStep(ss);
+            System.out.println(ss);
         }
         p.waitFor();
         if (p.exitValue() != 0) {
@@ -1034,6 +1035,7 @@ addr+"_allign.fas"};
                     
                     ProcessBuilder pb = new ProcessBuilder(s);
                     pb.redirectErrorStream(true);
+                    pb.directory(ErrorCorrection.env_path);
                     Process proc = pb.start();
 
                     BufferedReader stdInput = new BufferedReader(new InputStreamReader(proc.getInputStream()));
@@ -1048,6 +1050,7 @@ addr+"_allign.fas"};
                     while ((ss = stdInput.readLine()) != null) {
                         DynamicOut.printStep(ss);
                     }
+                    proc.waitFor();
                     if (proc.exitValue()!= 0)
                     {
                         System.err.println("Error in allgnment program");
@@ -1156,8 +1159,13 @@ addr+"_allign.fas"};
                 }
               DataSet corhap = new DataSet(hap);
               corhap.findHaplotypes();
-              StringTokenizer st1 = new StringTokenizer(addr,"_");
+              StringTokenizer st1 = new StringTokenizer(addr,"\\");
+              int ntok = st1.countTokens();
+              for (int i = 1; i <= ntok-1; i++)
+                  st1.nextToken();
               String tag = st1.nextToken();
+              st1 = new StringTokenizer(tag,"_");
+              tag = st1.nextToken();
               corhap.PrintHaplotypesWithNameTag(addr+"_postprocessed.fas", tag);
 //              corhap.PrintHaplotypes(addr+"_postprocessed.fas");
         }
@@ -1359,6 +1367,7 @@ addr+"_allign.fas"};
         int dominparamgenins = 100;
         fl = new File(addr);
         String pref = fl.getParent() + File.separator;
+
         if (!fl.exists()) {
             System.err.println("No such file!");
             return;
@@ -1390,7 +1399,8 @@ addr+"_allign.fas"};
             System.out.println("Here is the standard output of the command:\n");
             String ss;
             while ((ss = stdInput.readLine()) != null) {
-                DynamicOut.printStep(ss);
+//                DynamicOut.printStep(ss);
+                System.out.println(ss);
             }
             p.waitFor();
             if (p.exitValue() != 0) {
@@ -1413,15 +1423,18 @@ addr+"_allign.fas"};
             ss = brtree.readLine();
             String treestr = "";
             while (ss != null) {
-                treestr += s;
+                treestr += ss;
                 ss = brtree.readLine();
             }
             brtree.close();
+//            System.out.println(treestr);
             HashSet<ArrayList<Read>> closepairs = new HashSet<ArrayList<Read>>();
             Stack<Character> st = new Stack<Character>();
-            for (i = 0; i < treestr.length(); i++) {
+            for (i = 0; i < treestr.length(); i++) 
+            {
                 st.push(treestr.charAt(i));
-                if (treestr.charAt(i) == ')') {
+                if (treestr.charAt(i) == ')') 
+                {
                     String betw = "";
                     char c = ' ';
                     while (c != '(') {
@@ -1456,9 +1469,11 @@ addr+"_allign.fas"};
                         }
                         closepairs.add(pair);
                     }
-                    if (readsbetw.size() > 2) {
+                    if (readsbetw.size() > 2) 
+                    {
                         ArrayList<ArrayList<Read>> possibpairs = new ArrayList<ArrayList<Read>>();
-                        for (int u = 0; u < readsbetw.size(); u++) {
+                        for (int u = 0; u < readsbetw.size(); u++) 
+                        {
                             for (int v = u + 1; v < readsbetw.size(); v++) {
                                 ArrayList<Read> pospair = new ArrayList<Read>();
                                 for (Read r : hap.reads) {
@@ -1489,17 +1504,28 @@ addr+"_allign.fas"};
                             fw_alin.write(">" + ar.get(0).name + "\n" + ar.get(0).nucl + "\n");
                             fw_alin.write(">" + ar.get(1).name + "\n" + ar.get(1).nucl + "\n");
                             fw_alin.close();
-                            String[] param = new String[]{"ClustalW2" + File.separator +"clustalw2",
+/*                            String[] param = new String[]{"ClustalW2" + File.separator +"clustalw2",
                                "-INFILE=" + pref + "allign_input.fas",  
                                "-OUTFILE=" + pref + "allign_output.fas",
                             "-OUTPUT=FASTA", "-DNAMATRIX=IUB", "-GAPOPEN=" + gapop, 
                                     "-GAPEXT=" + gapext, "-TYPE=DNA", "-PWDNAMATRIX=IUB",
-                                    "-PWGAPOPEN=" + gapop, " -PWGAPEXT=" + gapext};
+                                    "-PWGAPOPEN=" + gapop, " -PWGAPEXT=" + gapext}; */
+                            
+                            String[] param = new String[]{"ClustalW2" + File.separator +"clustalw2",
+                              "-INFILE=" + pref + "allign_input.fas",
+                              "-OUTFILE=" + pref + "allign_output.fas",
+                          "-OUTPUT=FASTA", "-DNAMATRIX=IUB", "-GAPOPEN=" + gapop, 
+                          "-GAPEXT=" + gapext, "-TYPE=DNA",
+                                  "-PWDNAMATRIX=IUB", "-PWGAPOPEN=" + gapop,
+                                  "-PWGAPEXT=" + gapext};
+                            
+                            
                             p = run.exec(param, null, ErrorCorrection.env_path);
                             stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
                             
                             while ((ss = stdInput.readLine()) != null) {
-                                DynamicOut.printStep(ss);
+//                                DynamicOut.printStep(ss);
+                                System.out.println(ss);
                             }
                             p.waitFor();
                             if (p.exitValue() != 0) {
@@ -1575,20 +1601,33 @@ addr+"_allign.fas"};
                 fw_alin.write(">" + large.name + "\n" + large.nucl + "\n");
                 fw_alin.write(">" + small.name + "\n" + small.nucl + "\n");
                 fw_alin.close();
-                String[] param = new String[]{"ClustalW2" + File.separator +"clustalw2",
+                
+ /*               String[] param = new String[]{"ClustalW2" + File.separator +"clustalw2",
                         "-INFILE=" + pref + "allign_input.fas",
                         " -OUTFILE=" + pref + "allign_output.fas",
                 "-OUTPUT=FASTA","-DNAMATRIX=IUB","-GAPOPEN=" + gapop,
                 "-GAPEXT=" + gapext, "-TYPE=DNA", "-PWDNAMATRIX=IUB",
-                "-PWGAPOPEN=" + gapop, "-PWGAPEXT=" + gapext};
+                "-PWGAPOPEN=" + gapop, "-PWGAPEXT=" + gapext};*/
+                
+                String[] param = new String[]{"ClustalW2" + File.separator +"clustalw2",
+                "-INFILE=" + pref + "allign_input.fas",
+                "-OUTFILE=" + pref + "allign_output.fas",
+            "-OUTPUT=FASTA", "-DNAMATRIX=IUB", "-GAPOPEN=" + gapop, 
+            "-GAPEXT=" + gapext, "-TYPE=DNA",
+                    "-PWDNAMATRIX=IUB", "-PWGAPOPEN=" + gapop,
+                    "-PWGAPEXT=" + gapext};
+
+                
                 p = run.exec(param, null, ErrorCorrection.env_path);
                 stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
                 while ((ss = stdInput.readLine()) != null) {
-                    DynamicOut.printStep(ss);
+//                    DynamicOut.printStep(ss);
+                    System.out.println(ss);
                 }
                 p.waitFor();
                 if (p.exitValue() != 0) {
                     System.err.println("Error in allgnment program");
+
                 }
                 DynamicOut.finishSteps();
                 stdInput.close();
@@ -1828,8 +1867,8 @@ addr+"_allign.fas"};
     public void postprocessHaplotypesPairwise(String addr, double gapop, double gapext, int dominparamonenucl, int dominparamgen, int nucldiffparam, String idAlignAlg) throws IOException, InterruptedException
        {
            int dominparamgenins = 100;
-           String pref = fl.getParent() + File.separator;
             File fl = new File(addr);
+            String pref = fl.getParent() + File.separator;
                 if (!fl.exists())
                 {
                     System.out.println("No such file!");
@@ -1847,18 +1886,20 @@ addr+"_allign.fas"};
             int niterpostp = 20;
             for (int iter = 0; iter < niterpostp; iter++)
             {
+                                
                 System.out.println("Postprocessing haplotypes pairwise \n");
                 Runtime run=Runtime.getRuntime();
                 Process p=null;
                 
                 FileReader ftree = null;
+                File filetree = null;
                 if (idAlignAlg.equalsIgnoreCase(CLUSATL))
                 {
                     String[] s = new String[]{"ClustalW2" + File.separator +"clustalw2",
                 "-INFILE=" + addr,
                 "-OUTFILE=" + addr +"_allign.fas",
-            "-OUTPUT=FASTA", "-DNAMATRIX=IUB", "-GAPOPEN=" + gapop, 
-            "-GAPEXT=" + gapext, "-TYPE=DNA",
+                "-OUTPUT=FASTA", "-DNAMATRIX=IUB", "-GAPOPEN=" + gapop, 
+                "-GAPEXT=" + gapext, "-TYPE=DNA",
                     "-PWDNAMATRIX=IUB", "-PWGAPOPEN=" + gapop,
                     "-PWGAPEXT=" + gapext};
 
@@ -1868,7 +1909,8 @@ addr+"_allign.fas"};
                     System.out.println("Here is the standard output of the command:\n");
 		    String ss;
                     while ((ss = stdInput.readLine()) != null) {
-                        DynamicOut.printStep(ss);
+//                        DynamicOut.printStep(ss);
+                        System.out.println(ss);
                     }
                     p.waitFor();
                     if (p.exitValue()!= 0)
@@ -1881,32 +1923,38 @@ addr+"_allign.fas"};
                     while(addr.charAt(i) != '.')
                         i--;
                     ftree = new FileReader(addr.substring(0, i) + ".dnd");
+                    filetree = new File(addr.substring(0, i) + ".dnd");
                 }
                 
                 if (idAlignAlg.equalsIgnoreCase(MUSCLE))
-                {
-                    
+                {                    
                     String[] s = new String[] {"Muscle" + File.separator + "muscle", "-in", addr, "-out", addr+"_allign.fas","-tree2", "tree.phy"};
                     
                     ProcessBuilder pb = new ProcessBuilder(s);
                     pb.redirectErrorStream(true);
+                    pb.directory(ErrorCorrection.env_path);
                     Process proc = pb.start();
 
-                    BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
+                    BufferedReader stdInput = new BufferedReader(new InputStreamReader(proc.getInputStream()));
 
 
                     String ss;
                     System.out.println("Here is the standard output of the command:\n");
                     while ((ss = stdInput.readLine()) != null) {
-                        DynamicOut.printStep(ss);
+//                        DynamicOut.printStep(ss);
+                        System.out.println(ss);
                     }
+                    proc.waitFor();
                     if (proc.exitValue()!= 0)
                     {
                         System.err.println("Error in allgnment program");
                     }
 		    DynamicOut.finishSteps();
             	    stdInput.close();
-                    ftree = new FileReader("tree.phy");
+                    ftree = new FileReader(ErrorCorrection.env_path.getAbsolutePath()
+                            + File.separator + "tree.phy");
+                    filetree = new File(ErrorCorrection.env_path.getAbsolutePath()
+                            + File.separator + "tree.phy");
                 }
                 
                 BufferedReader brtree = new BufferedReader(ftree);
@@ -1925,6 +1973,7 @@ addr+"_allign.fas"};
                     s = brtree.readLine();
                 }
                 brtree.close();
+                filetree.delete();
                 HashSet<ArrayList<Read>> closepairs = new HashSet<ArrayList<Read>>();
                 Stack<Character> st = new Stack<Character>();
                 for (int i = 0; i < treestr.length(); i++)
@@ -2007,25 +2056,35 @@ addr+"_allign.fas"};
                             double optdominparam = Double.MAX_VALUE;
                             for (ArrayList<Read> ar : possibpairs)
                             {
-                                FileWriter fw_alin = new FileWriter("allign_input.fas");
+                                FileWriter fw_alin = new FileWriter(pref + "allign_input.fas");
                                 fw_alin.write(">" + ar.get(0).name + "\n" + ar.get(0).nucl + "\n");
                                 fw_alin.write(">" + ar.get(1).name + "\n" + ar.get(1).nucl + "\n");
                                 fw_alin.close();
                                 
-                                if (idAlignAlg.equalsIgnoreCase("Clustal"))
+                                if (idAlignAlg.equalsIgnoreCase(CLUSATL))
                                 {
-                                            String[] param = new String[]{"ClustalW2" + File.separator +"clustalw2",
+/*                                            String[] param = new String[]{"ClustalW2" + File.separator +"clustalw2",
                                        "-INFILE=" + pref + "allign_input.fas",  
                                        "-OUTFILE=" + pref + "allign_output.fas",
                                     "-OUTPUT=FASTA", "-DNAMATRIX=IUB", "-GAPOPEN=" + gapop, 
                                             "-GAPEXT=" + gapext, "-TYPE=DNA", "-PWDNAMATRIX=IUB",
-                                            "-PWGAPOPEN=" + gapop, " -PWGAPEXT=" + gapext};
+                                            "-PWGAPOPEN=" + gapop, " -PWGAPEXT=" + gapext}; */
+                                            
+                                    String[] param = new String[]{"ClustalW2" + File.separator +"clustalw2",
+                                    "-INFILE=" + pref + "allign_input.fas",
+                                    "-OUTFILE=" + pref + "allign_output.fas",
+                                    "-OUTPUT=FASTA", "-DNAMATRIX=IUB", "-GAPOPEN=" + gapop, 
+                                    "-GAPEXT=" + gapext, "-TYPE=DNA",
+                                        "-PWDNAMATRIX=IUB", "-PWGAPOPEN=" + gapop,
+                                        "-PWGAPEXT=" + gapext};
+                                            
                                     p = run.exec(param, null, ErrorCorrection.env_path);
                                     BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
 
                                     String ss;
                                     while ((ss = stdInput.readLine()) != null) {
-                                        DynamicOut.printStep(ss);
+//                                        DynamicOut.printStep(ss);
+                                        System.out.println(ss);
                                     }
                                     p.waitFor();
                                     if (p.exitValue() != 0) {
@@ -2035,23 +2094,26 @@ addr+"_allign.fas"};
                                     stdInput.close();
                                 }
 
-                                if (idAlignAlg.equalsIgnoreCase("Muscle"))
+                                if (idAlignAlg.equalsIgnoreCase(MUSCLE))
                                 {
 
-                                    String[] param = new String[] {"Muscle" + File.separator + "muscle", "-in", "allign_input.fas", "-out", "allign_output.fas"};
+                                    String[] param = new String[] {"Muscle" + File.separator + "muscle", "-in", pref + "allign_input.fas", "-out", pref + "allign_output.fas"};
 
-                                    ProcessBuilder pb = new ProcessBuilder(s);
+                                    ProcessBuilder pb = new ProcessBuilder(param);
                                     pb.redirectErrorStream(true);
+                                    pb.directory(ErrorCorrection.env_path);
                                     Process proc = pb.start();
 
-                                    BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
+                                    BufferedReader stdInput = new BufferedReader(new InputStreamReader(proc.getInputStream()));
 
 
                                     String ss;
                                     System.out.println("Here is the standard output of the command:\n");
                                     while ((ss = stdInput.readLine()) != null) {
-                                        DynamicOut.printStep(ss);
+ //                                       DynamicOut.printStep(ss);
+                                        System.out.println(ss);
                                     }
+                                    proc.waitFor();
                                     if (proc.exitValue()!= 0)
                                     {
                                         System.err.println("Error in allgnment program");
@@ -2060,13 +2122,13 @@ addr+"_allign.fas"};
                                     stdInput.close();
                                 }                                         
                             
-                            
-                                DataSet alignment = new DataSet("allign_output.fas",'c');
-                                File f = new File("allign_input.fas");
+                                
+                                DataSet alignment = new DataSet(pref + "allign_output.fas",'c');
+                                File f = new File(pref + "allign_input.fas");
                                 f.delete();
-                                f = new File("allign_output.fas");
+                                f = new File(pref + "allign_output.fas");
                                 f.delete();
-                                f = new File("allign_input.dnd");
+                                f = new File(pref + "allign_input.dnd");
                                 f.delete();
                                 String fir = alignment.reads.get(0).getNucl();
                                 String sec = alignment.reads.get(1).getNucl();
@@ -2126,26 +2188,37 @@ addr+"_allign.fas"};
 
                     run=Runtime.getRuntime();
                     p=null;
-                    FileWriter fw_alin = new FileWriter("allign_input.fas");
+                    FileWriter fw_alin = new FileWriter(pref + "allign_input.fas");
                     fw_alin.write(">" + large.name + "\n" + large.nucl + "\n");
                     fw_alin.write(">" + small.name + "\n" + small.nucl + "\n");
                     fw_alin.close();
                     
                     
-                    if (idAlignAlg.equalsIgnoreCase("Clustal"))
+                    if (idAlignAlg.equalsIgnoreCase(CLUSATL))
                                 {
-                                            String[] param = new String[]{"ClustalW2" + File.separator +"clustalw2",
+/*                                            String[] param = new String[]{"ClustalW2" + File.separator +"clustalw2",
                                        "-INFILE=" + pref + "allign_input.fas",  
                                        "-OUTFILE=" + pref + "allign_output.fas",
                                     "-OUTPUT=FASTA", "-DNAMATRIX=IUB", "-GAPOPEN=" + gapop, 
                                             "-GAPEXT=" + gapext, "-TYPE=DNA", "-PWDNAMATRIX=IUB",
-                                            "-PWGAPOPEN=" + gapop, " -PWGAPEXT=" + gapext};
+                                            "-PWGAPOPEN=" + gapop, " -PWGAPEXT=" + gapext}; */
+
+                                    String[] param = new String[]{"ClustalW2" + File.separator +"clustalw2",
+                                    "-INFILE=" + pref + "allign_input.fas",
+                                    "-OUTFILE=" + pref + "allign_output.fas",
+                                "-OUTPUT=FASTA", "-DNAMATRIX=IUB", "-GAPOPEN=" + gapop, 
+                                "-GAPEXT=" + gapext, "-TYPE=DNA",
+                                        "-PWDNAMATRIX=IUB", "-PWGAPOPEN=" + gapop,
+                                        "-PWGAPEXT=" + gapext};        
+                                            
+                                            
                                     p = run.exec(param, null, ErrorCorrection.env_path);
                                     BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
 
                                     String ss;
                                     while ((ss = stdInput.readLine()) != null) {
-                                        DynamicOut.printStep(ss);
+//                                        DynamicOut.printStep(ss);
+                                        System.out.println(ss);
                                     }
                                     p.waitFor();
                                     if (p.exitValue() != 0) {
@@ -2155,23 +2228,26 @@ addr+"_allign.fas"};
                                     stdInput.close();
                                 }
 
-                                if (idAlignAlg.equalsIgnoreCase("Muscle"))
+                                if (idAlignAlg.equalsIgnoreCase(MUSCLE))
                                 {
 
-                                    String[] param = new String[] {"Muscle" + File.separator + "muscle", "-in", "allign_input.fas", "-out", "allign_output.fas"};
+                                    String[] param = new String[] {"Muscle" + File.separator + "muscle", "-in", pref + "allign_input.fas", "-out", pref + "allign_output.fas"};
 
-                                    ProcessBuilder pb = new ProcessBuilder(s);
+                                    ProcessBuilder pb = new ProcessBuilder(param);
                                     pb.redirectErrorStream(true);
+                                    pb.directory(ErrorCorrection.env_path);
                                     Process proc = pb.start();
 
-                                    BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
+                                    BufferedReader stdInput = new BufferedReader(new InputStreamReader(proc.getInputStream()));
 
 
                                     String ss;
                                     System.out.println("Here is the standard output of the command:\n");
                                     while ((ss = stdInput.readLine()) != null) {
-                                        DynamicOut.printStep(ss);
+//                                        DynamicOut.printStep(ss);
+                                        System.out.println(ss);
                                     }
+                                    proc.waitFor();
                                     if (proc.exitValue()!= 0)
                                     {
                                         System.err.println("Error in allgnment program");
@@ -2181,12 +2257,12 @@ addr+"_allign.fas"};
                                 }                                      
                     
                     
-                    DataSet alignment = new DataSet("allign_output.fas",'c');
-                    File f = new File("allign_input.fas");
+                    DataSet alignment = new DataSet(pref + "allign_output.fas",'c');
+                    File f = new File(pref + "allign_input.fas");
                     f.delete();
-                    f = new File("allign_output.fas");
+                    f = new File(pref + "allign_output.fas");
                     f.delete();
-                    f = new File("allign_input.dnd");
+                    f = new File(pref + "allign_input.dnd");
                     f.delete();
                     String large_align = "";
                     String small_align = "";
@@ -2385,8 +2461,13 @@ addr+"_allign.fas"};
                 corhap.findHaplotypes();
                 if (iter == niterpostp - 1)
                     addr = addr + "_PostprocPair.fas";
-                StringTokenizer st1 = new StringTokenizer(addr,"_");
+                StringTokenizer st1 = new StringTokenizer(addr,"\\");
+                int ntok = st1.countTokens();
+                for (int i = 1; i <= ntok-1; i++)
+                  st1.nextToken();
                 String tag = st1.nextToken();
+                st1 = new StringTokenizer(tag,"_");
+                tag = st1.nextToken();
                 corhap.PrintHaplotypesWithNameTag(addr, tag);
 //                corhap.PrintHaplotypes(addr);
                 System.out.println("");
