@@ -1159,7 +1159,7 @@ addr+"_allign.fas"};
                 }
               DataSet corhap = new DataSet(hap);
               corhap.findHaplotypes();
-              StringTokenizer st1 = new StringTokenizer(addr,"\\");
+              StringTokenizer st1 = new StringTokenizer(addr, File.separator);
               int ntok = st1.countTokens();
               for (int i = 1; i <= ntok-1; i++)
                   st1.nextToken();
@@ -2461,7 +2461,7 @@ addr+"_allign.fas"};
                 corhap.findHaplotypes();
                 if (iter == niterpostp - 1)
                     addr = addr + "_PostprocPair.fas";
-                StringTokenizer st1 = new StringTokenizer(addr,"\\");
+                StringTokenizer st1 = new StringTokenizer(addr, File.separator);
                 int ntok = st1.countTokens();
                 for (int i = 1; i <= ntok-1; i++)
                   st1.nextToken();
