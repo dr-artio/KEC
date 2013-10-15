@@ -19,7 +19,7 @@ public class CalcStat {
         Runtime rt = Runtime.getRuntime();
         System.out.println(rt.maxMemory()/mb);
         
-        String folder_name = "Palmer";
+        String folder_name = "Pooling";
         File folder = new File(folder_name);
         System.out.println(folder.exists());
         File[] list_files = folder.listFiles();

@@ -48,7 +48,7 @@
                     <message>Maven artifacts for ${project.version}</message>  <!-- git commit message -->
                     <noJekyll>true</noJekyll>                                  <!-- disable webpage processing -->
                     <outputDirectory>${project.build.directory}/mvn-repo</outputDirectory> <!-- matches distribution management repository url above -->
-                    <branch>mvn-repo</branch>                       <!-- remote branch name -->
+                    <branch>refs/heads/mvn-repo</branch>                       <!-- remote branch name -->
                     <includes><include>**/*</include></includes>
                     <repositoryName>KEC</repositoryName>      <!-- github repo name -->
                     <repositoryOwner>night-stalker</repositoryOwner>    <!-- github username  -->
@@ -72,6 +72,27 @@
             <artifactId>argparse4j</artifactId>
             <version>0.4.1</version>
         </dependency>
+        <dependency>
+            <groupId>org.biojava</groupId>
+            <artifactId>biojava3-core</artifactId>
+            <version>3.0.5</version>
+        </dependency>
+        <dependency>
+            <groupId>org.biojava</groupId>
+            <artifactId>biojava3-phylo</artifactId>
+            <version>3.0.5</version>
+        </dependency>
+        <dependency>
+            <groupId>org.biojava</groupId>
+            <artifactId>biojava3-alignment</artifactId>
+            <version>3.0.5</version>
+        </dependency>
     </dependencies>
-
+    <repositories>
+        <repository>
+            <id>biojava-maven-repo</id>
+            <name>BioJava repository</name>
+            <url>http://www.biojava.org/download/maven/</url>
+        </repository>
+    </repositories>
 </project>

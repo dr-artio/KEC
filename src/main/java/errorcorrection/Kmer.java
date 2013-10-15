@@ -1,4 +1,6 @@
 package errorcorrection;
+import java.util.*;
+import java.math.*;
 
 public class Kmer extends Sequence{
 	int kCount;

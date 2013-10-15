@@ -1,4 +1,5 @@
 package errorcorrection;
+import java.util.*;
 
 public class Sequence {
 	String nucl;

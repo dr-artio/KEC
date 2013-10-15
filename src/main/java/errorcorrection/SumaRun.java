@@ -23,18 +23,16 @@ public class SumaRun {
 		
 //                int i = 9;
 //                int j = 4;
-            String folder_name = "Grinder";
+            String folder_name = "Pooling";
             File folder = new File(folder_name);
             System.out.println(folder.exists());
             File[] list_files = folder.listFiles();
         
 
-//            int[] thresholds = {19,20,18,24,17,19,16,20,18,12,20,13,12,23,17,25,21,25,26,21,17,27,25,16,22,20,16,11,13,14,15,22,26,12,21,23,18,20,19,22,29,32,27,27,39,27,19,28,21,27,21,28};
-//            int[] thresholds = {13,21,9,21,16,15,13,10,11,12,21,13,12,22,15,13,15,11,13,14,13,18,13,15,11,14,13,7,11,10,11,11,13,9,12,21,16,19,17,16,13,11,13,14,21,9,14,23,18,20,13,14};
-//all_NH_110412            int[] thresholds = {18,20,21,13,16,19,16,24,14,20,24,27,28,23,16,9,13,14,19,20,33,12,18,26,12,23,12,24,21,26,26,21,17,13,19,16,22,7,18,12,12,11,17,14,15,13,21,26,12,13,16,18,15,13,14,27,14,22,25,27,27,21,27,1,19,29,22,17,21,28,18,13,21,19};
-           int[] thresholds = {22,30,27,15,20,10,19,17,13,18,25};
+
+           int[] thresholds = {3,5,6,8,4,6,4,7,7};
             
-            int nRun = 1;
+            int nRun = 2;
             
 
             
@@ -85,7 +83,7 @@ public class SumaRun {
 
                     ds.setK(k);
                     ds.setFindErrorsSeglen(errorsseglen);
-//                    ds.setFreqThr(f);
+                    ds.setFreqThr(f);
                     ds.setLenThr(lt);
                     ds.setMaxAllErrorsPerc(mErPerc);
 

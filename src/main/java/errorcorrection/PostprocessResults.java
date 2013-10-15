@@ -5,6 +5,7 @@
 
 package errorcorrection;
 
+import java.io.File;
 import java.io.IOException;
 
 /**
@@ -24,8 +25,8 @@ public static void main(String[] args) throws IOException, InterruptedException 
                 int toFindHapl = 0;
                 int dominparamonenucl = 2;
                 int nucldiffparam = 1;
-                int dominparamgen = 2;
-                int dominparampostpr = 2;
+                int dominparamgen = 5;
+                int dominparampostpr = 5;
                 boolean toPrintStat = true;
                 int errorsseglen = (int) k/3;
 
@@ -34,27 +35,43 @@ public static void main(String[] args) throws IOException, InterruptedException 
 		boolean toCalcHapl = true;
                 boolean toDelUncor = false;
                 boolean toPostprocessHeur = false; //???
+                
+                
+            String folder_name = "Pooling";
+            File folder = new File(folder_name);
+            System.out.println(folder.exists());
+            File[] list_files = folder.listFiles();
+            
+            double gapop = 15;
+            double gapext = 6;
+            
+            for (int i = 0; i < list_files.length; i++)
+            {
 
-//                String dset_file_name = "amp20.fas";
-                String dset_file_name = "RL7_reversed.fas_corrected.fas";
-//                String dset_file_name = "P7T6_reversed.fas_corrected.fas_haplotypes.fas.fas";
-//                DataSet ds = new DataSet(dset_file_name);
-                Corrector cr = new Corrector();
- //               ds.findHaplotypes();
-
-//                ds.PrintHaplotypes(dset_file_name+"_haplotypes.fas");
-                    cr.postprocessHaplotypes(dset_file_name,15,6.6,dominparampostpr);
-                    System.out.println(dset_file_name);
-                    cr.postprocessHaplotypesPairwise(dset_file_name +"_postprocessed.fas", 15, 6.6, dominparamonenucl, dominparamgen, nucldiffparam);
-                    cr.postprocessHaplotypes(dset_file_name+"_postprocessed.fas_PostprocPair.fas",15,6.6,dominparampostpr);
-                    cr.postprocessHaplotypesPairwise(dset_file_name + "_postprocessed.fas_PostprocPair.fas_postprocessed.fas", 15, 6.6, dominparamonenucl, dominparamgen, nucldiffparam);
-
-//		Corrector cr = new Corrector();
-//                cr.printRevComp("Prep1-9.fas_corrected.fas_haplotypes.fas");
-//                cr.postprocessHaplotypes("HOC_1_1b.fas_corrected.fas_haplotypes.fas_postprocessed.fas_RevComp.fas_PostprocPair.fas_postprocessed.fas_PostprocPair.fas", 15, 6, 5);
-//               cr.postprocessHaplotypesPairwise("HOC_1_1b.fas_corrected.fas_haplotypes.fas_postprocessed.fas_RevComp.fas_PostprocPair1.fas", 15, 6.6, 3, 10, nucldiffparam);
+                    String dset_file_name = list_files[i].getPath();
+                    
+                    int ncorrections = 1;
+                    while (ncorrections != 0)
+                    {
 
 
+    //                String dset_file_name = "P39_PT_sec2_unique_meta_w4_unique.fas_PostprocShift.fas";
+    //                DataSet ds = new DataSet(dset_file_name);
+                    Corrector cr = new Corrector();
+    //                System.out.println(cr.findMinDist(dset_file_name1, dset_file_name2));
+    //                ds.findHaplotypes();
+
+    //                ds.PrintHaplotypes(dset_file_name+"_haplotypes.fas");
+                    String idAlignAlg = "Muscle";
+                    String idMethod = "KEC";
+                        cr.postprocessHaplotypes(dset_file_name,gapop,gapext,dominparampostpr,idAlignAlg,idMethod);
+                        System.out.println(dset_file_name);
+                        ncorrections = cr.postprocessHaplotypesPairwise(dset_file_name +"_postprocessed.fas", gapop, gapext, dominparamonenucl, dominparamgen, nucldiffparam,idAlignAlg,idMethod);
+                        dset_file_name = dset_file_name+"_postprocessed.fas_PostprocPair.fas";
+
+                    }
+
+            }
 	}
 
 }

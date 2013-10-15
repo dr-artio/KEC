@@ -87,7 +87,7 @@ public class Poisson {
     }
     
     /**
-     * Set _lambda value.
+     * Set _lambsa value.
      * @param stvar
      *      ordered array (index as a value of X)
      * @param start
@@ -104,7 +104,7 @@ public class Poisson {
      }
      
      /**
-     * Set _lambda value.
+     * Set _lambsa value.
      * @param stvar
      *      ordered array (index as a value of X)
      * @param start
