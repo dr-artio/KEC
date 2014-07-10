@@ -4,6 +4,7 @@
  */
 package ErrorCorrection;
 
+import ErrorCorrection.Corrector;
 import java.io.File;
 import java.io.IOException;
 import java.util.StringTokenizer;
@@ -12,8 +13,8 @@ import java.util.StringTokenizer;
  *
  * @author kki8
  */
-public class PostprocessShift {
-    public static void main(String[] args) throws IOException, InterruptedException {
+public class RenameReads {
+     public static void main(String[] args) throws IOException, InterruptedException {
 
 
             String folder_name = "Postprocess";
@@ -29,16 +30,23 @@ public class PostprocessShift {
 //                String dset_file_name = "C13OK1_1_MID2_run1_reversed_unique.fas_PostprocShift.fas_Renamed.fas";
                 
                 Corrector cr = new Corrector();
-//                cr.delGaps(dset_file_name);
-//                cr.postprocessHaplotypesNuclSwitch(dset_file_name,"ET", 6.6, 6.6, 2);
-                cr.postprocessHaplotypesNuclSwitch(dset_file_name,"ET", 12, 6.6, 2,5);
-//                cr.postprocessAlignedHaplotypesNuclSwitch(dset_file_name,"ET", 2);
 
+                String tag = "";
+                StringTokenizer st = new StringTokenizer(dset_file_name,"_\\");
+                st.nextToken();
+                String s = st.nextToken();
+                while (!s.equalsIgnoreCase("reversed"))
+                {
+                    tag += ("_" + s);
+                    s = st.nextToken();
+                }
+                
+                tag = tag.substring(1);
+                cr.renameReads(dset_file_name, tag);
         }
 
 
 
 	}
-
     
 }

@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package errorcorrection;
+package ErrorCorrection;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,12 +19,12 @@ public class CalcStat {
         Runtime rt = Runtime.getRuntime();
         System.out.println(rt.maxMemory()/mb);
         
-        String folder_name = "Pooling";
+        String folder_name = "Hong";
         File folder = new File(folder_name);
         System.out.println(folder.exists());
         File[] list_files = folder.listFiles();
         
-        int rename = 0;
+        int rename = 1;
         
         if (rename == 1)
         {

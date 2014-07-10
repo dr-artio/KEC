@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package errorcorrection;
+package ErrorCorrection;
 
 import java.io.File;
 import java.io.IOException;

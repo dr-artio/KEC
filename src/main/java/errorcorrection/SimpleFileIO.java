@@ -1,4 +1,4 @@
-package errorcorrection;
+package ErrorCorrection;
 
 
 import static java.lang.String.format;

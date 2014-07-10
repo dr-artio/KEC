@@ -1,4 +1,6 @@
-package errorcorrection;
+package ErrorCorrection;
+
+import java.io.IOException;
 
 public class Haplotype extends Sequence {
 	int frequency;
@@ -19,5 +21,13 @@ public class Haplotype extends Sequence {
 			return true;
 		else
 			return false;
+	}
+        boolean containsReadAlign(Read r, int gapop, int gapext) throws IOException
+	{
+		Read s = new Read(this.nucl);
+                if (s.calcEditDistAbsAlign(r, gapop, gapext) == 0)
+                    return true;
+                else
+                    return false;
 	}
 }

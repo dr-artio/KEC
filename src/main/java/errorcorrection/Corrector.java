@@ -1,4 +1,4 @@
-package errorcorrection;
+package ErrorCorrection;
 
 import java.io.BufferedReader;
 import java.io.File;

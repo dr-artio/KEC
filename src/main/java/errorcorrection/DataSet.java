@@ -1,10 +1,10 @@
-package errorcorrection;
+package ErrorCorrection;
 import java.util.*;
 import java.io.*;
 import java.math.BigDecimal;
 
-import static errorcorrection.Poisson.*;
-import static errorcorrection.Exponent.*;
+import static ErrorCorrection.Poisson.*;
+import static ErrorCorrection.Exponent.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -516,6 +516,115 @@ public class DataSet {
 			}
 			if(s.charAt(0) == '>')
 			{
+//                                        System.out.println(name);
+                                        int f = 0;
+                                        if (idmethod.equalsIgnoreCase("ET"))
+                                        {
+                                            StringTokenizer st = new StringTokenizer(name,"_");
+                                            int nnn = st.countTokens();
+                                            for (int tok = 1; tok <= nnn-ntokenfreqFromEnd; tok++)
+                                                st.nextToken();
+                                            f = (int) (Double.parseDouble(st.nextToken()));
+//                                            System.out.println();
+                                        }
+                                        
+                                        if (idmethod.equalsIgnoreCase("KEC"))
+                                        {
+                                            StringTokenizer st = new StringTokenizer(name,"|");
+                                            st.nextToken();
+                                            f = (int) (10000*Double.parseDouble(st.nextToken()));
+                                        }
+                                        if (idmethod.equalsIgnoreCase("EPLD"))
+                                        {
+                                            StringTokenizer st = new StringTokenizer(name,"-");
+                                            if (st.countTokens() == 2)
+                                                f = 1;
+                                            if (st.countTokens() > 2)
+                                            {
+ //                                               System.out.println(st.countTokens());
+                                                int ct = st.countTokens();
+                                                for (int tok = 1; tok <= ct-1; tok++)
+                                                    st.nextToken();
+                                                f = (int) (Integer.parseInt(st.nextToken()));
+                                            }
+                                        }
+                                                    
+					reads.add(new Read(nucl, name,f));	
+					nucl = "";
+					name = "";
+					i = 1;
+					while ((i < s.length())&&(s.charAt(i)!=' '))
+					{
+						name+=s.charAt(i);
+						i++;
+					}
+			}
+			else
+				nucl+=s.toUpperCase();
+			s = br.readLine();
+		}
+                int f = 0;
+                if (idmethod.equalsIgnoreCase("ET"))
+                {
+                    StringTokenizer st = new StringTokenizer(name,"_");
+                    int nnn = st.countTokens();
+                    for (int tok = 1; tok <= nnn-ntokenfreqFromEnd; tok++)
+                        st.nextToken();
+                    f = (int) (Double.parseDouble(st.nextToken()));
+                }                
+                if (idmethod.equalsIgnoreCase("KEC"))
+                {
+                    StringTokenizer st = new StringTokenizer(name,"|");
+                    st.nextToken();
+                    f = (int) (10000*Double.parseDouble(st.nextToken()));
+                }
+                if (idmethod.equalsIgnoreCase("EPLD"))
+                {
+                    StringTokenizer st = new StringTokenizer(name,"-");
+                    if (st.countTokens() == 2)
+                        f = 1;
+                    if (st.countTokens() > 2)
+                    {
+                        for (int tok = 1; tok <= st.countTokens()-1; tok++)
+                            st.nextToken();
+                        f = (int) (Integer.parseInt(st.nextToken()));
+                    }
+                 }
+                
+		reads.add(new Read(nucl, name,f));
+		fr.close();           
+        }
+        public DataSet(String addr, String idmethod, int ntokenfreqFromEnd) throws FileNotFoundException, IOException
+        {            
+                reads = new ArrayList<Read>();
+		haplotypes = new ArrayList<Haplotype>();
+                
+                FileReader fr = new FileReader(addr);
+		BufferedReader br = new BufferedReader(fr);
+		
+		String s = br.readLine();
+                while(s.equalsIgnoreCase(""))
+                    s = br.readLine();
+		String nucl = new String();
+		String name = new String();
+		name = "";
+		int i = 1;
+		int j = s.length();
+		while ((i < s.length())&&(s.charAt(i)!=' '))
+		{
+			name+=s.charAt(i);
+			i++;
+		}
+		s = br.readLine();
+		while (s!= null)
+		{
+                        if (s.length() == 0)
+			{
+				s = br.readLine();
+				continue;
+			}
+			if(s.charAt(0) == '>')
+			{
                                         int f = 0;
                                         if (idmethod.equalsIgnoreCase("ET"))
                                         {
@@ -566,6 +675,20 @@ public class DataSet {
                 
 		reads.add(new Read(nucl, name,f));
 		fr.close();           
+        }
+        public DataSet(DataSet ds, int i)
+        {
+                reads = new ArrayList();
+                lengthThr = 50;
+                additionalfreqThrMult = 10;
+                maxAllErrorsPerc = 40;
+                freqThr = -1;
+		reads = new ArrayList<Read>();
+		allKmers = new ArrayList<Kmer_general>();
+		haplotypes = new ArrayList<Haplotype>();
+                finderrorsseglen = k;
+                for (Read r : ds.reads)
+                    this.reads.add(r);
         }
         public DataSet()
         {
@@ -670,7 +793,6 @@ public class DataSet {
 	}
 	
 	void clustering() throws IOException
-
         {
 		 int count = 0;
                  int count1 = 0;
@@ -678,6 +800,11 @@ public class DataSet {
 		 {
 			 count++;
                          count1++;
+                         if (r.nucl.length() < this.k)
+                         {
+                             System.out.println("The value of k is higher than the length of some reads. Choose smaller k!");
+                             System.exit(0);
+                         }
                          System.out.println("Clustering: read " + count + "/" + reads.size());
 			 File f = new File("kmer" + count + "data.txt");
 			 FileWriter fw = new FileWriter(f);
@@ -1848,6 +1975,53 @@ public class DataSet {
                 System.out.println("Goodhapl=" + goodhapl);
                 System.out.println("Badhapl=" + badhapl);
 	}
+        public void findHaplotypesAlign(String idmethod, String idsort, int gapop, int gapext) throws IOException
+	{
+		haplotypes = new ArrayList<Haplotype>();
+                if (idsort.equalsIgnoreCase("Length"))
+                {
+                    StrComp sc = new StrComp();
+                    Collections.sort(reads, sc);
+                }
+                
+                if (idsort.equalsIgnoreCase("Frequency"))
+                {
+                    ReadComp sc = new ReadComp();
+                    Collections.sort(reads, sc);
+                }
+                
+		System.out.println("Finding haplotypes");
+		for (int i = 0; i < reads.size(); i++)
+		{
+                        Read r = reads.get(i);
+                        System.out.println(i + "//" + reads.size());
+                    
+			boolean toAdd = true;
+                        ArrayList<Haplotype> conthapls = new ArrayList();
+			for (Haplotype h : haplotypes)
+				if (h.containsReadAlign(r,gapop,gapext))
+                                    conthapls.add(h);
+			if (conthapls.size() == 0)
+				haplotypes.add(new Haplotype(r));
+			else
+				for (Haplotype h : conthapls)
+					h.frequency += r.frequency/conthapls.size();
+		}
+
+                double allconc = 0;
+                for (Haplotype h : haplotypes)
+                    allconc+=h.frequency;
+                
+                    for (Haplotype h : haplotypes)
+                    {
+                        if (!idmethod.equalsIgnoreCase("ET"))
+                            h.concentration = ((double) h.frequency) / allconc;
+                        else
+                            h.concentration = h.frequency;
+                    }
+                    
+
+	}
 	void compareHaplWithClones(String clonefile) throws IOException
 	{
 		DataSet cds = new DataSet(clonefile,'c');
@@ -2454,6 +2628,16 @@ public class DataSet {
 		}
 		fw.close();
 	}
+        public void PrintReadsNoCopyNumber(String outfile) throws IOException
+	{
+		FileWriter fw = new FileWriter(outfile);
+		for(Read r : reads)
+                {
+				for (int i = 0; i < r.frequency; i++)
+					fw.write(">" + r.name + "\n" + r.getNucl() + "\n");
+		}
+		fw.close();
+	}
         void fixDirection(String refFile, double gapop, double gapext) throws IOException
         {
             DataSet refds = new DataSet(refFile);
@@ -2573,7 +2757,7 @@ public class DataSet {
             }
             fw.close();
         }
-        Read findMostFreqRead()
+        public Read findMostFreqRead()
                 // <editor-fold defaultstate="collapsed" desc=" DESCRIPTION ">
         {
             Read maxr = new Read();
@@ -2682,7 +2866,7 @@ public class DataSet {
 		for (int  i = 0; i < n; i++)
 		{
                     Read r = reads.get(i);
-			ar.add(new Read(r.nucl,r.frequency));
+			ar.add(new Read(r.nucl,r.name,r.frequency));
 		}
                 return ar;
 	}
@@ -2694,4 +2878,85 @@ public class DataSet {
             
             return false;
         }
+         public boolean containReadAlignment(Read s) throws IOException
+        {
+            for (Read r : reads)
+                if (r.calcEditDistAbsAlign(s, 15, 6) == 0)
+                    return true;
+            
+            return false;
+        }
+         public void delGaps()
+         {
+             for (Read r : this.reads)
+             {
+//                 System.out.println(r.nucl);
+                 String s = "";
+                 for (int i = 0; i < r.nucl.length(); i++)
+                     if (r.nucl.charAt(i) != '-')
+                         s+=r.nucl.charAt(i);
+                 r.nucl = s;
+//                 System.out.println(r.nucl);
+//                 System.out.println();
+             }
+         }
+         public boolean equals(DataSet ds)
+         {
+             for (Read r : this.reads)
+                 if (!ds.containRead(r))
+                     return false;
+             for (Read r : ds.reads)
+                 if (!this.containRead(r))
+                     return false;
+             return true;
+         }
+         public int getTotalNReads()
+         {
+             int Nreads = 0;
+             for (Read r : this.reads)
+                 Nreads += r.frequency;
+             return Nreads;
+         }
+         public int getFrequency(Read s)
+         {
+              for (Read r : reads)
+                if (r.nucl.equalsIgnoreCase(s.nucl))
+                    return r.frequency;
+            
+            return 0;
+         }
+          public int getFrequencyAlign(Read s) throws IOException
+         {
+             int freq = 0;
+              for (Read r : reads)
+                if (r.calcEditDistAbsAlignIgnoreIns(s) == 0)
+                    freq += r.frequency;
+             
+            
+            return freq;
+         }
+          public int getFrequencyAlign(Read s, int gapop, int gapext) throws IOException
+         {
+             int freq = 0;
+              for (Read r : reads)
+              {
+//                    System.out.println(s.name);
+//                    System.out.println(r.name);
+                    if (r.calcEditDistAbsAlign(s, gapop, gapext) == 0)
+                        freq += r.frequency;
+              }
+             
+            
+            return freq;
+         }
+          public void delPrimers(ArrayList<Read> primers)
+          {
+              for (Read r : this.reads)
+                  for (Read prim : primers)
+                    if (r.nucl.endsWith(prim.nucl))
+                    {
+                        r.nucl = r.nucl.substring(0, r.getLength() - prim.getLength());
+                        break;
+                    }
+          }
 }

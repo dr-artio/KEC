@@ -1,5 +1,5 @@
 
-package errorcorrection;
+package ErrorCorrection;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
@@ -410,6 +410,13 @@ public class Read extends Sequence {
 				Alignments.getPairwiseAlignment(query, target,
 						PairwiseSequenceAlignerType.GLOBAL, gapP, matrix);
                 
+/*                for (int i = 1; i <= psa.getLength(); i++)
+                    System.out.print(psa.getCompoundAt(1, i));
+                System.out.println();
+                for (int i = 1; i <= psa.getLength(); i++)
+                    System.out.print(psa.getCompoundAt(2, i));
+                System.out.println();
+                System.out.println("---------------------------");*/
                 
                 int st = 1;
                 while (psa.hasGap(st))
@@ -434,7 +441,63 @@ public class Read extends Sequence {
                
                 
                 
-                return ((double) d)/(end-st+1);
+//                return ((double) d)/(end-st+1);
+                return d;
                 
         }
+        public int calcHammingDist(Read r)
+        {
+            int d = 0;
+            int m = Math.min(this.getLength(), r.getLength());
+            for (int i = 0; i < m; i++)
+                if (this.getNucl(i) != r.getNucl(i))
+                    d++;
+            return d;
+        }
+        public void setFrequency(int f)
+        {
+            frequency = f;
+        }
+        public Read findAverage(Read r, int gapop, int gapext)
+        {
+                DNASequence target = new DNASequence(this.nucl,
+				AmbiguityDNACompoundSet.getDNACompoundSet());
+		DNASequence query = new DNASequence(r.nucl,
+				AmbiguityDNACompoundSet.getDNACompoundSet());
+ 
+		SubstitutionMatrix<NucleotideCompound> matrix = SubstitutionMatrixHelper.getNuc4_4();
+ 
+		SimpleGapPenalty gapP = new SimpleGapPenalty();
+		gapP.setOpenPenalty((short)gapop);
+		gapP.setExtensionPenalty((short)gapext);
+ 
+		SequencePair<DNASequence, NucleotideCompound> psa =
+				Alignments.getPairwiseAlignment(query, target,
+						PairwiseSequenceAlignerType.GLOBAL, gapP, matrix);
+                
+                String s = "";
+                for (int i = 1; i <= psa.getLength(); i++)
+                {
+                    if (psa.getCompoundAt(1, i) == psa.getCompoundAt(2, i))
+                        s+=psa.getCompoundAt(1, i);
+                    else
+                    {
+                        double d = Math.random();
+                        if (d < 0.5)
+                            s+=psa.getCompoundAt(1, i);
+                        else
+                            s+=psa.getCompoundAt(2, i);
+                    }
+                }
+                return new Read(s);
+        }
+        public void delGaps()
+        {
+                 String s = "";
+                 for (int i = 0; i < this.nucl.length(); i++)
+                     if (this.nucl.charAt(i) != '-')
+                         s+=this.nucl.charAt(i);
+                 this.nucl = s;
+        }
+                
 }

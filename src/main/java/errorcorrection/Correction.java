@@ -1,4 +1,4 @@
-package errorcorrection;
+package ErrorCorrection;
 
 public class Correction {
 	

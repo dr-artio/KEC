@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package errorcorrection;
+package ErrorCorrection;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,7 +37,7 @@ public static void main(String[] args) throws IOException, InterruptedException 
                 boolean toPostprocessHeur = false; //???
                 
                 
-            String folder_name = "Pooling";
+            String folder_name = "Postprocess";
             File folder = new File(folder_name);
             System.out.println(folder.exists());
             File[] list_files = folder.listFiles();

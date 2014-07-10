@@ -1,4 +1,4 @@
-package errorcorrection;
+package ErrorCorrection;
 
 public class ErrorRegion extends Sequence {
 	int begin;

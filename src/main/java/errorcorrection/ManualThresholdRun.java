@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package errorcorrection;
+package ErrorCorrection;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,7 +13,7 @@ import java.io.IOException;
  *
  * @author kki8
  */
-public class SumaRun {
+public class ManualThresholdRun {
     public static void main(String[] args) throws IOException, InterruptedException {
 
              int mb = 1024*1024;
@@ -23,16 +23,16 @@ public class SumaRun {
 		
 //                int i = 9;
 //                int j = 4;
-            String folder_name = "Pooling";
+            String folder_name = "Hong";
             File folder = new File(folder_name);
             System.out.println(folder.exists());
             File[] list_files = folder.listFiles();
         
 
 
-           int[] thresholds = {3,5,6,8,4,6,4,7,7};
+           int[] thresholds = {27,23,19,6,24,15,4};
             
-            int nRun = 2;
+            int nRun = 1;
             
 
             
@@ -51,7 +51,7 @@ public class SumaRun {
                 int nucldiffparam = 1;
                 int dominparamgen = 25;
                 int dominparampostpr = 25;
-                int errorsseglen = 25;
+                int errorsseglen = 0;
                 boolean toPrintStat = false;
 
                 int maxz = 3;
